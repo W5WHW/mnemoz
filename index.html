@@ -36,7 +36,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- Верхнее Меню (шторка) --- */
+        /* --- Меню (шторка) --- */
         .controls-top {
             position: absolute;
             top: 0;
@@ -44,22 +44,22 @@
             width: 100%;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 8px; /* Чуть уменьшил отступы, чтобы всё влезло на узких экранах */
             background: rgba(30, 30, 30, 0.95);
-            padding: 20px 0;
+            padding: 15px 5px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             backdrop-filter: blur(10px);
             align-items: flex-end;
             transform: translateY(-100%);
             transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             z-index: 100;
+            box-sizing: border-box;
         }
 
         .controls-top.visible {
             transform: translateY(0);
         }
 
-        /* Невидимая зона для вызова меню тапом сверху */
         .trigger-zone {
             position: absolute;
             top: 0;
@@ -80,8 +80,8 @@
             background: #2c2c2e;
             border: 1px solid #3a3a3c;
             color: var(--text-primary);
-            width: 60px;
-            padding: 10px;
+            width: 50px;
+            padding: 8px;
             border-radius: 10px;
             text-align: center;
             font-family: inherit;
@@ -90,8 +90,8 @@
             outline: none;
         }
 
-        /* Кнопка звука */
-        .sound-btn {
+        /* Иконки-кнопки (Звук и Авто) */
+        .icon-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -99,17 +99,18 @@
             font-size: 0.7rem;
             color: var(--text-secondary);
             cursor: pointer;
-            width: 60px;
+            width: 50px;
         }
-        .sound-icon {
-            font-size: 1.8rem;
-            margin-top: 5px;
+        .icon {
+            font-size: 1.5rem;
+            margin-top: 8px;
             opacity: 0.5;
             transition: 0.2s;
         }
-        .sound-icon.active {
+        .icon.active {
             opacity: 1;
             transform: scale(1.1);
+            color: var(--accent-green);
         }
 
         /* --- Главный дисплей --- */
@@ -126,7 +127,6 @@
             transition: transform 0.1s ease;
         }
         
-        /* Уменьшаем шрифт если 3 цифры */
         .main-display.small-font {
             font-size: 8rem;
             letter-spacing: -2px;
@@ -136,7 +136,6 @@
             transform: scale(0.95);
         }
 
-        /* Анимация появления */
         .fade-enter {
             animation: fadeIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -170,7 +169,7 @@
             gap: 20px;
             mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-            pointer-events: none; /* Чтобы тапать сквозь историю */
+            pointer-events: none; 
         }
 
         .history-item {
@@ -211,13 +210,17 @@
             <label>Сек</label>
             <input type="number" id="timerInput" value="3" step="0.5">
         </div>
-        <div class="sound-btn" onclick="toggleSound()">
+        <div class="icon-btn" onclick="toggleAuto()">
+            <span>Авто</span>
+            <div class="icon" id="autoIcon">▶️</div>
+        </div>
+        <div class="icon-btn" onclick="toggleSound()">
             <span>Звук</span>
-            <div class="sound-icon" id="soundIcon">🔇</div>
+            <div class="icon" id="soundIcon">🔇</div>
         </div>
     </div>
 
-    <div class="main-display" id="display" onclick="generate()">TAP</div>
+    <div class="main-display" id="display" onclick="handleMainTap()">TAP</div>
     
     <div class="status-indicator" id="status">● Auto Play</div>
 
@@ -226,7 +229,6 @@
     <div class="hint">Tap Top for Settings</div>
 
     <script>
-        // Элементы
         const els = {
             display: document.getElementById('display'),
             min: document.getElementById('minInput'),
@@ -235,10 +237,10 @@
             history: document.getElementById('history'),
             status: document.getElementById('status'),
             soundIcon: document.getElementById('soundIcon'),
+            autoIcon: document.getElementById('autoIcon'),
             controls: document.getElementById('controls')
         };
 
-        // Состояние
         let state = {
             autoInterval: null,
             history: [],
@@ -246,47 +248,34 @@
             voices: []
         };
 
-        // --- Инициализация голосов ---
         function loadVoices() {
             state.voices = window.speechSynthesis.getVoices();
         }
         window.speechSynthesis.onvoiceschanged = loadVoices;
-        setTimeout(loadVoices, 500); // Страховка
+        setTimeout(loadVoices, 500);
 
         function getBestVoice() {
             const ru = state.voices.filter(v => v.lang.startsWith('ru'));
             if (ru.length === 0) return null;
-            // Приоритет качественным голосам
             const google = ru.find(v => v.name.includes('Google'));
             const premium = ru.find(v => v.name.includes('Premium') || v.name.includes('Siri'));
             return google || premium || ru[0];
         }
 
-        // --- Умная озвучка ---
         function speak(text, numVal) {
             if (!state.soundOn) return;
             window.speechSynthesis.cancel();
 
             let phrase = text;
-
-            // Логика произношения для мнемотехники:
-            // 1. "05" -> "Ноль пять" (вместо просто "пять")
             if (text.startsWith('0') && text.length === 2 && numVal < 10 && numVal > 0) {
                 phrase = "Ноль " + numVal;
-            }
-            // 2. "00" -> "Ноль ноль"
-            else if (text === "00") {
+            } else if (text === "00") {
                 phrase = "Ноль ноль";
-            }
-            // 3. "007" -> "Ноль ноль семь" (трехзначные с нулями)
-            else if (text.length === 3 && text.startsWith('00')) {
+            } else if (text.length === 3 && text.startsWith('00')) {
                  phrase = "Ноль ноль " + parseInt(text);
-            }
-            // 4. "050" -> "Ноль пятьдесят"
-            else if (text.length === 3 && text.startsWith('0')) {
+            } else if (text.length === 3 && text.startsWith('0')) {
                  phrase = "Ноль " + parseInt(text);
             }
-            // 5. Обычные числа (870, 65) читаются синтезатором корректно ("Восемьсот семьдесят")
 
             const ut = new SpeechSynthesisUtterance(phrase);
             ut.lang = 'ru-RU';
@@ -298,34 +287,25 @@
             window.speechSynthesis.speak(ut);
         }
 
-        // --- Генерация ---
         function generate() {
             let min = parseInt(els.min.value) || 0;
             let max = parseInt(els.max.value) || 99;
             if (min > max) [min, max] = [max, min];
 
             const num = Math.floor(Math.random() * (max - min + 1)) + min;
-            
-            // Если макс число > 99, используем 3 знака (005), иначе 2 (05)
             const padding = max > 99 ? 3 : 2;
             const formatted = num.toString().padStart(padding, '0');
 
-            // Визуал
             els.display.textContent = formatted;
             
-            // Анимация
             els.display.classList.remove('fade-enter');
             void els.display.offsetWidth; 
             els.display.classList.add('fade-enter');
 
-            // Размер шрифта
             if(formatted.length > 2) els.display.classList.add('small-font');
             else els.display.classList.remove('small-font');
 
-            // История
             addToHistory(formatted);
-            
-            // Звук
             speak(formatted, num);
         }
 
@@ -346,13 +326,10 @@
             });
         }
 
-        // --- Управление ---
         function toggleMenu() {
             els.controls.classList.toggle('visible');
-            // Автоскрытие через 4 сек
             if(els.controls.classList.contains('visible')) {
                 setTimeout(() => {
-                    // Проверка, не взаимодействует ли юзер с инпутами
                     if (document.activeElement.tagName !== 'INPUT') {
                         els.controls.classList.remove('visible');
                     }
@@ -364,26 +341,41 @@
             state.soundOn = !state.soundOn;
             els.soundIcon.textContent = state.soundOn ? "🔊" : "🔇";
             els.soundIcon.classList.toggle('active', state.soundOn);
-            // Прогрев голосов
             if(state.soundOn && state.voices.length === 0) loadVoices();
         }
 
         function toggleAuto() {
             if (state.autoInterval) {
+                // Выключаем авто-режим
                 clearInterval(state.autoInterval);
                 state.autoInterval = null;
                 els.status.classList.remove('active');
+                els.autoIcon.textContent = "▶️";
+                els.autoIcon.classList.remove('active');
             } else {
+                // Включаем авто-режим
                 generate();
                 const ms = parseFloat(els.timer.value) * 1000;
                 state.autoInterval = setInterval(generate, ms);
                 els.status.classList.add('active');
+                els.autoIcon.textContent = "⏸️";
+                els.autoIcon.classList.add('active');
             }
         }
 
-        // --- Хоткеи (для ПК) ---
+        // Новая логика для мобильного экрана
+        function handleMainTap() {
+            if (state.autoInterval) {
+                // Если крутится таймер — тап работает как кнопка ПАУЗА
+                toggleAuto();
+            } else {
+                // Иначе генерируем следующее число
+                generate();
+            }
+        }
+
         document.addEventListener('keydown', (e) => {
-            if(e.code === 'Space') { e.preventDefault(); generate(); }
+            if(e.code === 'Space') { e.preventDefault(); handleMainTap(); }
             if(e.code === 'KeyA') toggleAuto();
         });
     </script>
