@@ -44,7 +44,7 @@
             width: 100%;
             display: flex;
             justify-content: center;
-            gap: 8px; /* Чуть уменьшил отступы, чтобы всё влезло на узких экранах */
+            gap: 5px; /* Уменьшено для вместительности на телефонах */
             background: rgba(30, 30, 30, 0.95);
             padding: 15px 5px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -72,7 +72,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-secondary);
         }
 
@@ -80,8 +80,8 @@
             background: #2c2c2e;
             border: 1px solid #3a3a3c;
             color: var(--text-primary);
-            width: 50px;
-            padding: 8px;
+            width: 45px;
+            padding: 8px 4px;
             border-radius: 10px;
             text-align: center;
             font-family: inherit;
@@ -90,13 +90,13 @@
             outline: none;
         }
 
-        /* Иконки-кнопки (Звук и Авто) */
+        /* Иконки-кнопки */
         .icon-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-secondary);
             cursor: pointer;
             width: 50px;
@@ -111,6 +111,11 @@
             opacity: 1;
             transform: scale(1.1);
             color: var(--accent-green);
+        }
+        
+        /* Специфично для иконки режима */
+        #uniqueIcon.active {
+            color: var(--primary-color);
         }
 
         /* --- Главный дисплей --- */
@@ -130,6 +135,12 @@
         .main-display.small-font {
             font-size: 8rem;
             letter-spacing: -2px;
+        }
+        
+        .main-display.text-font {
+            font-size: 6rem;
+            letter-spacing: 0px;
+            color: var(--accent-green);
         }
 
         .main-display:active {
@@ -210,6 +221,11 @@
             <label>Сек</label>
             <input type="number" id="timerInput" value="3" step="0.5">
         </div>
+        
+        <div class="icon-btn" onclick="toggleUnique()">
+            <span>Режим</span>
+            <div class="icon" id="uniqueIcon">♾️</div>
+        </div>
         <div class="icon-btn" onclick="toggleAuto()">
             <span>Авто</span>
             <div class="icon" id="autoIcon">▶️</div>
@@ -238,6 +254,7 @@
             status: document.getElementById('status'),
             soundIcon: document.getElementById('soundIcon'),
             autoIcon: document.getElementById('autoIcon'),
+            uniqueIcon: document.getElementById('uniqueIcon'),
             controls: document.getElementById('controls')
         };
 
@@ -245,9 +262,37 @@
             autoInterval: null,
             history: [],
             soundOn: false,
+            uniqueMode: false,
+            deck: [],
             voices: []
         };
 
+        // Перемешивание массива (Алгоритм Фишера-Йетса)
+        function shuffleDeck(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Создание колоды чисел без повторов
+        function buildDeck() {
+            let min = parseInt(els.min.value) || 0;
+            let max = parseInt(els.max.value) || 99;
+            if (min > max) [min, max] = [max, min];
+            
+            state.deck = [];
+            for (let i = min; i <= max; i++) {
+                state.deck.push(i);
+            }
+            shuffleDeck(state.deck);
+        }
+
+        // Перестроить колоду при изменении инпутов (если включен режим)
+        els.min.addEventListener('change', () => { if(state.uniqueMode){ buildDeck(); updateStatus(); } });
+        els.max.addEventListener('change', () => { if(state.uniqueMode){ buildDeck(); updateStatus(); } });
+
+        // Голоса
         function loadVoices() {
             state.voices = window.speechSynthesis.getVoices();
         }
@@ -267,7 +312,10 @@
             window.speechSynthesis.cancel();
 
             let phrase = text;
-            if (text.startsWith('0') && text.length === 2 && numVal < 10 && numVal > 0) {
+            
+            if (text === "ВСЁ") {
+                phrase = "Всё! Готово.";
+            } else if (text.startsWith('0') && text.length === 2 && numVal < 10 && numVal > 0) {
                 phrase = "Ноль " + numVal;
             } else if (text === "00") {
                 phrase = "Ноль ноль";
@@ -287,26 +335,60 @@
             window.speechSynthesis.speak(ut);
         }
 
+        function updateStatus() {
+            let textArr = [];
+            if (state.autoInterval) textArr.push("▶ АВТО");
+            if (state.uniqueMode) textArr.push(`ОСТАЛОСЬ: ${state.deck.length}`);
+            
+            if (textArr.length > 0) {
+                els.status.textContent = textArr.join(" | ");
+                els.status.classList.add('active');
+            } else {
+                els.status.classList.remove('active');
+            }
+        }
+
         function generate() {
             let min = parseInt(els.min.value) || 0;
             let max = parseInt(els.max.value) || 99;
             if (min > max) [min, max] = [max, min];
 
-            const num = Math.floor(Math.random() * (max - min + 1)) + min;
+            let num;
+
+            // Логика режима без повторов
+            if (state.uniqueMode) {
+                if (state.deck.length === 0) {
+                    // Конец колоды
+                    els.display.textContent = "ВСЁ";
+                    els.display.className = 'main-display text-font fade-enter';
+                    speak("ВСЁ", null);
+                    
+                    if (state.autoInterval) toggleAuto(); // Останавливаем авто
+                    buildDeck(); // Готовим новую колоду для следующего тапа
+                    updateStatus();
+                    return;
+                }
+                num = state.deck.pop();
+            } else {
+                // Обычный рандом
+                num = Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
             const padding = max > 99 ? 3 : 2;
             const formatted = num.toString().padStart(padding, '0');
 
+            // Отрисовка
             els.display.textContent = formatted;
             
-            els.display.classList.remove('fade-enter');
+            els.display.className = 'main-display'; // Сброс классов
             void els.display.offsetWidth; 
             els.display.classList.add('fade-enter');
 
             if(formatted.length > 2) els.display.classList.add('small-font');
-            else els.display.classList.remove('small-font');
 
             addToHistory(formatted);
             speak(formatted, num);
+            updateStatus();
         }
 
         function addToHistory(val) {
@@ -346,31 +428,38 @@
 
         function toggleAuto() {
             if (state.autoInterval) {
-                // Выключаем авто-режим
                 clearInterval(state.autoInterval);
                 state.autoInterval = null;
-                els.status.classList.remove('active');
                 els.autoIcon.textContent = "▶️";
                 els.autoIcon.classList.remove('active');
             } else {
-                // Включаем авто-режим
                 generate();
                 const ms = parseFloat(els.timer.value) * 1000;
                 state.autoInterval = setInterval(generate, ms);
-                els.status.classList.add('active');
                 els.autoIcon.textContent = "⏸️";
                 els.autoIcon.classList.add('active');
             }
+            updateStatus();
         }
 
-        // Новая логика для мобильного экрана
+        function toggleUnique() {
+            state.uniqueMode = !state.uniqueMode;
+            els.uniqueIcon.textContent = state.uniqueMode ? "🔀" : "♾️";
+            els.uniqueIcon.classList.toggle('active', state.uniqueMode);
+            
+            if (state.uniqueMode) {
+                buildDeck();
+            } else {
+                state.deck = [];
+            }
+            updateStatus();
+        }
+
         function handleMainTap() {
             if (state.autoInterval) {
-                // Если крутится таймер — тап работает как кнопка ПАУЗА
-                toggleAuto();
+                toggleAuto(); // Пауза
             } else {
-                // Иначе генерируем следующее число
-                generate();
+                generate(); // Следующее число
             }
         }
 
