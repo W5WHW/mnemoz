@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#121212">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Mnemonic Zen 7.0</title>
+    <title>Mnemonic Zen 7.1</title>
     
     <link rel="apple-touch-icon" href="https://img.icons8.com/nolan/180/brain.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/nolan/64/brain.png">
@@ -37,6 +37,20 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* --- Кнопка вызова меню (всегда на виду, но бледная) --- */
+        .menu-trigger {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.8rem;
+            opacity: 0.2; /* Полупрозрачная, чтобы не отвлекать */
+            z-index: 90;
+            cursor: pointer;
+            transition: opacity 0.3s, transform 0.2s;
+        }
+        .menu-trigger:active { transform: scale(0.9); }
+        .menu-trigger.hidden { opacity: 0; pointer-events: none; }
+
         /* --- Верхняя панель (Шторка) --- */
         .top-bar {
             position: absolute;
@@ -52,7 +66,6 @@
             border-bottom: 1px solid #333;
         }
         .top-bar.visible { transform: translateY(0); }
-        .trigger-zone { position: absolute; top: 0; width: 100%; height: 70px; z-index: 90; }
 
         .icon-btn {
             display: flex; flex-direction: column; align-items: center;
@@ -103,7 +116,7 @@
         .hist-item:first-child { font-size: 2rem; opacity: 1; color: var(--text); font-weight: bold; }
         .hist-item.red:first-child { color: var(--red-suit); }
 
-        /* Кнопка проверки (Плавающая снизу) */
+        /* Кнопка проверки */
         .verify-btn {
             position: absolute; bottom: 20px;
             background: var(--surface-light); border: 1px solid #444; color: var(--text);
@@ -113,7 +126,7 @@
         }
         .verify-btn.visible { display: block; }
 
-        /* --- Модальные Окна (Настройки и Проверка) --- */
+        /* --- Модальные Окна --- */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
@@ -129,7 +142,6 @@
         }
         .modal-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; text-align: center; color: var(--primary); }
         
-        /* Стили для формы настроек */
         .setting-group { margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
         .setting-group h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--text-dim); }
         .flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -150,7 +162,6 @@
             width: 100%; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px;
         }
 
-        /* Стили для доски проверки */
         .recall-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
             gap: 10px; width: 100%;
@@ -159,25 +170,20 @@
             background: var(--surface-light); border: 1px solid #444; border-radius: 8px;
             aspect-ratio: 1; display: flex; justify-content: center; align-items: center;
             font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s;
-            color: transparent; /* Скрыто по умолчанию */
-            position: relative;
+            color: transparent; position: relative;
         }
-        .recall-cell::after {
-            content: "?"; position: absolute; color: var(--text-dim); font-size: 1.5rem;
-        }
+        .recall-cell::after { content: "?"; position: absolute; color: var(--text-dim); font-size: 1.5rem; }
         .recall-cell.revealed { background: #fff; color: #000; border-color: #fff; }
         .recall-cell.revealed::after { display: none; }
         .recall-cell.revealed.red { color: var(--red-suit); }
 
         .action-row { display: flex; gap: 10px; margin-top: 20px; }
         .action-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #333; color: white; font-family: inherit; cursor: pointer; }
-        .action-btn.primary { background: var(--primary); color: #000; font-weight: bold; }
-
     </style>
 </head>
 <body>
 
-    <div class="trigger-zone" onclick="toggleMenu()"></div>
+    <div class="menu-trigger" id="menuBtn" onclick="toggleMenu()">⚙️</div>
 
     <div class="top-bar" id="topBar">
         <div class="icon-btn" onclick="toggleMode()">
@@ -204,7 +210,6 @@
     
     <div class="status" id="status"></div>
     <div class="history-strip" id="history"></div>
-    
     <button class="verify-btn" id="btnVerify" onclick="openRecall()">👁️ Проверить себя</button>
 
     <div class="modal" id="modalSettings">
@@ -249,10 +254,7 @@
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-title">Дворец Памяти (Проверка)</div>
             <p style="font-size: 0.8rem; color: var(--text-dim); text-align: center; margin-top: -10px;">Тапай по карточкам, чтобы открыть</p>
-            
-            <div class="recall-grid" id="recallGrid">
-                </div>
-
+            <div class="recall-grid" id="recallGrid"></div>
             <div class="action-row">
                 <button class="action-btn" onclick="revealAll()">Открыть всё</button>
                 <button class="action-btn" onclick="exportData()">📋 Скопировать</button>
@@ -262,9 +264,9 @@
     </div>
 
     <script>
-        // --- Архитектура и Состояние ---
         const UI = {
             topBar: document.getElementById('topBar'),
+            menuBtn: document.getElementById('menuBtn'),
             stage: document.getElementById('stage'),
             dData: document.getElementById('displayData'),
             dImg: document.getElementById('displayImg'),
@@ -276,29 +278,19 @@
         };
 
         let S = {
-            mode: 'numbers', // 'numbers' | 'cards'
-            unique: false,
-            auto: null,
-            sound: false,
-            started: false,  // Флаг: находимся ли мы в процессе (чтобы показывать кнопку Проверки)
-            deck: [],        // Рабочая колода для 🔀
-            sessionSeq: [],  // Вся последовательность для экрана Проверки
-            histView: [],    // Последние элементы для нижней ленты
-            voices: []
+            mode: 'numbers', unique: false, auto: null, sound: false, started: false,
+            deck: [], sessionSeq: [], histView: [], voices: []
         };
 
-        // --- Карточная база ---
         const SUITS = { 'S':'♠', 'H':'♥', 'D':'♦', 'C':'♣' };
         const VALS = { '2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','0':'10','J':'В','Q':'Д','K':'К','A':'Т' };
         
-        // --- Предзагрузка ---
         let allCardCodes = [];
         ['S','H','D','C'].forEach(s => Object.keys(VALS).forEach(v => {
             allCardCodes.push(v+s);
-            new Image().src = `https://deckofcardsapi.com/static/img/${v+s}.png`; // Фоновая загрузка
+            new Image().src = `https://deckofcardsapi.com/static/img/${v+s}.png`;
         }));
 
-        // --- Звук ---
         window.speechSynthesis.onvoiceschanged = () => S.voices = window.speechSynthesis.getVoices();
         setTimeout(() => window.speechSynthesis.getVoices(), 500);
 
@@ -306,10 +298,8 @@
             if (!S.sound) return;
             window.speechSynthesis.cancel();
             let phrase = text;
-
-            if (text === "СТАРТ" || text === "ВСЁ") {
-                phrase = text === "ВСЁ" ? "Всё! Готово" : "Начинаем";
-            } else if (isCard) {
+            if (text === "СТАРТ" || text === "ВСЁ") phrase = text === "ВСЁ" ? "Всё! Готово" : "Начинаем";
+            else if (isCard) {
                 const sv = {'S':'пик','H':'червей','D':'бубен','C':'треф'};
                 const vv = {'2':'Двойка','3':'Тройка','4':'Четверка','5':'Пятерка','6':'Шестерка','7':'Семерка','8':'Восьмерка','9':'Девятка','0':'Десятка','J':'Валет','Q':'Дама','K':'Король','A':'Туз'};
                 phrase = `${vv[text[0]]} ${sv[text[1]]}`;
@@ -319,7 +309,6 @@
                 else if (text.length === 3 && text.startsWith('00')) phrase = "Ноль ноль " + parseInt(text);
                 else if (text.length === 3 && text.startsWith('0')) phrase = "Ноль " + parseInt(text);
             }
-
             const ut = new SpeechSynthesisUtterance(phrase);
             ut.lang = 'ru-RU';
             const ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
@@ -327,7 +316,6 @@
             window.speechSynthesis.speak(ut);
         }
 
-        // --- Сборка Колоды (с учетом фильтров) ---
         function buildDeck() {
             S.deck = [];
             if (S.mode === 'numbers') {
@@ -336,7 +324,6 @@
                 if (min > max) [min, max] = [max, min];
                 for (let i = min; i <= max; i++) S.deck.push(i);
             } else {
-                // Карты: читаем фильтры
                 const sFilter = [];
                 if(document.getElementById('cS').checked) sFilter.push('S');
                 if(document.getElementById('cH').checked) sFilter.push('H');
@@ -349,67 +336,43 @@
                 if(document.getElementById('rHigh').checked) rFilter.push('J','Q','K','A');
 
                 S.deck = allCardCodes.filter(c => sFilter.includes(c[1]) && rFilter.includes(c[0]));
-                
                 if(S.deck.length === 0) {
                     alert("Выключены все масти или ранги! Колода пуста.");
                     document.getElementById('cS').checked = true;
                     document.getElementById('rLow').checked = true;
-                    buildDeck(); // Fallback
-                    return;
+                    buildDeck(); return;
                 }
             }
-            
-            // Фишер-Йетс
             for (let i = S.deck.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [S.deck[i], S.deck[j]] = [S.deck[j], S.deck[i]];
             }
         }
 
-        // --- Управление Состоянием (Reset) ---
         function resetToStart() {
-            if (S.auto) toggleAuto(); // Стоп таймер
-            S.started = false;
-            S.sessionSeq = [];
-            S.histView = [];
-            UI.history.innerHTML = '';
-            UI.btnVerify.classList.remove('visible');
-            
-            UI.dImg.style.display = 'none';
-            UI.dData.style.display = 'block';
-            UI.dData.textContent = "СТАРТ";
-            UI.dData.className = 'start-text fade-in';
-            
+            if (S.auto) toggleAuto();
+            S.started = false; S.sessionSeq = []; S.histView = [];
+            UI.history.innerHTML = ''; UI.btnVerify.classList.remove('visible');
+            UI.dImg.style.display = 'none'; UI.dData.style.display = 'block';
+            UI.dData.textContent = "СТАРТ"; UI.dData.className = 'start-text fade-in';
             updateStatus();
         }
 
         function updateStatus() {
             let txt = [];
             if (S.auto) txt.push("▶ АВТО");
-            if (S.unique) {
-                txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
-            } else if (S.started) {
-                txt.push(`СЕССИЯ: ${S.sessionSeq.length}`); // Счетчик сгенерированных
-            }
+            if (S.unique) txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
+            else if (S.started) txt.push(`СЕССИЯ: ${S.sessionSeq.length}`);
             UI.status.textContent = txt.join(" | ");
             if (txt.length) UI.status.classList.add('visible');
             else UI.status.classList.remove('visible');
         }
 
-        // --- Генерация ---
         function generate() {
-            if (!S.started) {
-                S.started = true;
-                if (S.unique) buildDeck(); // Формируем колоду только при старте сессии
-                UI.btnVerify.classList.add('visible'); // Показываем кнопку проверки
-            }
-
+            if (!S.started) { S.started = true; if (S.unique) buildDeck(); UI.btnVerify.classList.add('visible'); }
             let item;
             if (S.unique) {
-                if (S.deck.length === 0) {
-                    finishSequence();
-                    return;
-                }
+                if (S.deck.length === 0) { finishSequence(); return; }
                 item = S.deck.pop();
             } else {
                 if (S.mode === 'numbers') {
@@ -418,18 +381,36 @@
                     if (min > max) [min, max] = [max, min];
                     item = Math.floor(Math.random() * (max - min + 1)) + min;
                 } else {
-                    buildDeck(); // В бесконечном режиме просто берем случайную из отфильтрованных
-                    item = S.deck[Math.floor(Math.random() * S.deck.length)];
+                    buildDeck(); item = S.deck[Math.floor(Math.random() * S.deck.length)];
                 }
             }
-
             drawItem(item);
         }
 
         function drawItem(item) {
             UI.dData.classList.remove('fade-in'); void UI.dData.offsetWidth;
-            
             let histObj = { raw: item, text: '', isRed: false, isCard: S.mode === 'cards' };
 
             if (S.mode === 'numbers') {
-                UI.dImg.style.display = 'none'; UI.dData.style.display = 'blo
+                UI.dImg.style.display = 'none'; UI.dData.style.display = 'block';
+                let max = parseInt(document.getElementById('inpMax').value) || 99;
+                const txt = item.toString().padStart(max > 99 ? 3 : 2, '0');
+                UI.dData.textContent = txt;
+                UI.dData.className = txt.length > 2 ? 'small fade-in' : 'fade-in';
+                histObj.text = txt; speak(txt, false, item);
+            } else {
+                UI.dData.style.display = 'none'; UI.dImg.style.display = 'block';
+                UI.dImg.src = `https://deckofcardsapi.com/static/img/${item}.png`;
+                histObj.text = `${VALS[item[0]]}${SUITS[item[1]]}`;
+                histObj.isRed = ['H','D'].includes(item[1]);
+                speak(item, true);
+            }
+
+            S.sessionSeq.push(histObj);
+            S.histView.unshift(histObj);
+            if (S.histView.length > 7) S.histView.pop();
+            
+            UI.history.innerHTML = '';
+            S.histView.forEach((h, i) => {
+                let el = document.createElement('div');
+              
