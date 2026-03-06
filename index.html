@@ -19,6 +19,7 @@
             --text-primary: #e0e0e0;
             --text-secondary: #a0a0a0;
             --accent-green: #03dac6;
+            --card-red: #ff4a4a;
         }
 
         body {
@@ -44,7 +45,7 @@
             width: 100%;
             display: flex;
             justify-content: center;
-            gap: 5px; /* Уменьшено для вместительности на телефонах */
+            gap: 2px;
             background: rgba(30, 30, 30, 0.95);
             padding: 15px 5px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -74,14 +75,15 @@
             align-items: center;
             font-size: 0.65rem;
             color: var(--text-secondary);
+            transition: opacity 0.3s;
         }
 
         input[type="number"] {
             background: #2c2c2e;
             border: 1px solid #3a3a3c;
             color: var(--text-primary);
-            width: 45px;
-            padding: 8px 4px;
+            width: 40px;
+            padding: 8px 2px;
             border-radius: 10px;
             text-align: center;
             font-family: inherit;
@@ -99,7 +101,7 @@
             font-size: 0.65rem;
             color: var(--text-secondary);
             cursor: pointer;
-            width: 50px;
+            width: 45px;
         }
         .icon {
             font-size: 1.5rem;
@@ -113,52 +115,60 @@
             color: var(--accent-green);
         }
         
-        /* Специфично для иконки режима */
-        #uniqueIcon.active {
-            color: var(--primary-color);
-        }
+        #uniqueIcon.active { color: var(--primary-color); }
+        #modeIcon.active { color: #ffb86c; } /* Оранжевый для карт */
 
         /* --- Главный дисплей --- */
         .main-display {
-            font-size: 12rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            line-height: 1;
-            letter-spacing: -5px;
             position: relative;
             z-index: 10;
-            text-shadow: 0 0 40px rgba(187, 134, 252, 0.2);
             cursor: pointer;
             transition: transform 0.1s ease;
-        }
-        
-        .main-display.small-font {
-            font-size: 8rem;
-            letter-spacing: -2px;
-        }
-        
-        .main-display.text-font {
-            font-size: 6rem;
-            letter-spacing: 0px;
-            color: var(--accent-green);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 60vh;
         }
 
         .main-display:active {
             transform: scale(0.95);
         }
 
+        /* Текст чисел */
+        #displayText {
+            font-size: 12rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1;
+            letter-spacing: -5px;
+            text-shadow: 0 0 40px rgba(187, 134, 252, 0.2);
+        }
+        #displayText.small-font { font-size: 8rem; letter-spacing: -2px; }
+        #displayText.text-font { font-size: 6rem; letter-spacing: 0px; color: var(--accent-green); }
+
+        /* Изображение карты */
+        #displayImg {
+            display: none;
+            max-height: 100%;
+            max-width: 80vw;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            object-fit: contain;
+        }
+
         .fade-enter {
-            animation: fadeIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeIn 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.9); }
+            from { opacity: 0; transform: translateY(15px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         /* --- Статус и История --- */
         .status-indicator {
-            margin-top: 40px;
+            margin-top: 10px;
             font-size: 0.8rem;
             color: var(--accent-green);
             opacity: 0;
@@ -177,7 +187,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
             mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             pointer-events: none; 
@@ -188,13 +198,16 @@
             color: var(--text-secondary);
             opacity: 0.5;
             transition: all 0.3s;
+            font-weight: 500;
         }
+        .history-item.red { color: var(--card-red); }
         .history-item:first-child {
             font-size: 2.2rem;
-            color: var(--text-primary);
             opacity: 1;
             font-weight: bold;
+            color: var(--text-primary);
         }
+        .history-item.red:first-child { color: var(--card-red); }
 
         .hint {
             position: absolute;
@@ -209,11 +222,11 @@
     <div class="trigger-zone" onclick="toggleMenu()"></div>
 
     <div class="controls-top" id="controls">
-        <div class="input-group">
+        <div class="input-group" id="groupMin">
             <label>От</label>
             <input type="number" id="minInput" value="0">
         </div>
-        <div class="input-group">
+        <div class="input-group" id="groupMax">
             <label>До</label>
             <input type="number" id="maxInput" value="99">
         </div>
@@ -222,6 +235,10 @@
             <input type="number" id="timerInput" value="3" step="0.5">
         </div>
         
+        <div class="icon-btn" onclick="toggleDataType()">
+            <span>Тип</span>
+            <div class="icon" id="modeIcon">🔢</div>
+        </div>
         <div class="icon-btn" onclick="toggleUnique()">
             <span>Режим</span>
             <div class="icon" id="uniqueIcon">♾️</div>
@@ -236,38 +253,69 @@
         </div>
     </div>
 
-    <div class="main-display" id="display" onclick="handleMainTap()">TAP</div>
+    <div class="main-display" id="display" onclick="handleMainTap()">
+        <div id="displayText">TAP</div>
+        <img id="displayImg" src="" alt="Card">
+    </div>
     
     <div class="status-indicator" id="status">● Auto Play</div>
-
     <div class="history-container" id="history"></div>
-
     <div class="hint">Tap Top for Settings</div>
 
     <script>
         const els = {
-            display: document.getElementById('display'),
+            displayText: document.getElementById('displayText'),
+            displayImg: document.getElementById('displayImg'),
+            displayBox: document.getElementById('display'),
             min: document.getElementById('minInput'),
             max: document.getElementById('maxInput'),
+            groupMin: document.getElementById('groupMin'),
+            groupMax: document.getElementById('groupMax'),
             timer: document.getElementById('timerInput'),
             history: document.getElementById('history'),
             status: document.getElementById('status'),
             soundIcon: document.getElementById('soundIcon'),
             autoIcon: document.getElementById('autoIcon'),
             uniqueIcon: document.getElementById('uniqueIcon'),
+            modeIcon: document.getElementById('modeIcon'),
             controls: document.getElementById('controls')
         };
 
+        // --- Данные для карт ---
+        const suits = ['S', 'H', 'D', 'C']; // Spades, Hearts, Diamonds, Clubs
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '0', 'J', 'Q', 'K', 'A']; // 0 is 10 in the API
+        const fullDeckCards = [];
+        suits.forEach(s => values.forEach(v => fullDeckCards.push(v + s)));
+
+        // Словари для истории
+        const suitSymbols = { 'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣' };
+        const valueSymbols = { '2':'2', '3':'3', '4':'4', '5':'5', '6':'6', '7':'7', '8':'8', '9':'9', '0':'10', 'J':'В', 'Q':'Д', 'K':'К', 'A':'Т' };
+        const redSuits = ['H', 'D'];
+
+        // Словари для озвучки
+        const suitVoice = { 'S': 'пик', 'H': 'червей', 'D': 'бубен', 'C': 'треф' };
+        const valVoice = { '2':'Двойка', '3':'Тройка', '4':'Четверка', '5':'Пятерка', '6':'Шестерка', '7':'Семерка', '8':'Восьмерка', '9':'Девятка', '0':'Десятка', 'J':'Валет', 'Q':'Дама', 'K':'Король', 'A':'Туз' };
+
         let state = {
+            dataType: 'numbers', // 'numbers' или 'cards'
             autoInterval: null,
             history: [],
             soundOn: false,
             uniqueMode: false,
-            deck: [],
+            deck: [], 
             voices: []
         };
 
-        // Перемешивание массива (Алгоритм Фишера-Йетса)
+        // --- Предзагрузка изображений ---
+        function preloadCards() {
+            fullDeckCards.forEach(card => {
+                const img = new Image();
+                img.src = `https://deckofcardsapi.com/static/img/${card}.png`;
+            });
+        }
+        preloadCards(); // Запускаем тихо в фоне при старте
+
+        // --- Алгоритм Фишера-Йетса ---
         function shuffleDeck(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -275,27 +323,25 @@
             }
         }
 
-        // Создание колоды чисел без повторов
+        // --- Подготовка колоды ---
         function buildDeck() {
-            let min = parseInt(els.min.value) || 0;
-            let max = parseInt(els.max.value) || 99;
-            if (min > max) [min, max] = [max, min];
-            
             state.deck = [];
-            for (let i = min; i <= max; i++) {
-                state.deck.push(i);
+            if (state.dataType === 'numbers') {
+                let min = parseInt(els.min.value) || 0;
+                let max = parseInt(els.max.value) || 99;
+                if (min > max) [min, max] = [max, min];
+                for (let i = min; i <= max; i++) state.deck.push(i);
+            } else {
+                state.deck = [...fullDeckCards];
             }
             shuffleDeck(state.deck);
         }
 
-        // Перестроить колоду при изменении инпутов (если включен режим)
-        els.min.addEventListener('change', () => { if(state.uniqueMode){ buildDeck(); updateStatus(); } });
-        els.max.addEventListener('change', () => { if(state.uniqueMode){ buildDeck(); updateStatus(); } });
+        els.min.addEventListener('change', () => { if(state.uniqueMode) { buildDeck(); updateStatus(); } });
+        els.max.addEventListener('change', () => { if(state.uniqueMode) { buildDeck(); updateStatus(); } });
 
-        // Голоса
-        function loadVoices() {
-            state.voices = window.speechSynthesis.getVoices();
-        }
+        // --- Голоса ---
+        function loadVoices() { state.voices = window.speechSynthesis.getVoices(); }
         window.speechSynthesis.onvoiceschanged = loadVoices;
         setTimeout(loadVoices, 500);
 
@@ -307,31 +353,31 @@
             return google || premium || ru[0];
         }
 
-        function speak(text, numVal) {
+        function speak(text, isCard = false, numVal = null) {
             if (!state.soundOn) return;
             window.speechSynthesis.cancel();
-
             let phrase = text;
-            
+
             if (text === "ВСЁ") {
                 phrase = "Всё! Готово.";
-            } else if (text.startsWith('0') && text.length === 2 && numVal < 10 && numVal > 0) {
-                phrase = "Ноль " + numVal;
-            } else if (text === "00") {
-                phrase = "Ноль ноль";
-            } else if (text.length === 3 && text.startsWith('00')) {
-                 phrase = "Ноль ноль " + parseInt(text);
-            } else if (text.length === 3 && text.startsWith('0')) {
-                 phrase = "Ноль " + parseInt(text);
+            } else if (isCard) {
+                // Извлекаем карту (например "0S" -> "Десятка пик")
+                const v = text[0];
+                const s = text[1];
+                phrase = `${valVoice[v]} ${suitVoice[s]}`;
+            } else {
+                // Логика чисел
+                if (text.startsWith('0') && text.length === 2 && numVal < 10 && numVal > 0) phrase = "Ноль " + numVal;
+                else if (text === "00") phrase = "Ноль ноль";
+                else if (text.length === 3 && text.startsWith('00')) phrase = "Ноль ноль " + parseInt(text);
+                else if (text.length === 3 && text.startsWith('0')) phrase = "Ноль " + parseInt(text);
             }
 
             const ut = new SpeechSynthesisUtterance(phrase);
             ut.lang = 'ru-RU';
             ut.rate = 1.0; 
-            
             const v = getBestVoice();
             if (v) ut.voice = v;
-
             window.speechSynthesis.speak(ut);
         }
 
@@ -348,58 +394,92 @@
             }
         }
 
+        // --- Основной генератор ---
         function generate() {
-            let min = parseInt(els.min.value) || 0;
-            let max = parseInt(els.max.value) || 99;
-            if (min > max) [min, max] = [max, min];
+            let currentItem;
 
-            let num;
-
-            // Логика режима без повторов
             if (state.uniqueMode) {
                 if (state.deck.length === 0) {
-                    // Конец колоды
-                    els.display.textContent = "ВСЁ";
-                    els.display.className = 'main-display text-font fade-enter';
-                    speak("ВСЁ", null);
-                    
-                    if (state.autoInterval) toggleAuto(); // Останавливаем авто
-                    buildDeck(); // Готовим новую колоду для следующего тапа
-                    updateStatus();
+                    showEndScreen();
                     return;
                 }
-                num = state.deck.pop();
+                currentItem = state.deck.pop();
             } else {
-                // Обычный рандом
-                num = Math.floor(Math.random() * (max - min + 1)) + min;
+                if (state.dataType === 'numbers') {
+                    let min = parseInt(els.min.value) || 0;
+                    let max = parseInt(els.max.value) || 99;
+                    if (min > max) [min, max] = [max, min];
+                    currentItem = Math.floor(Math.random() * (max - min + 1)) + min;
+                } else {
+                    currentItem = fullDeckCards[Math.floor(Math.random() * fullDeckCards.length)];
+                }
             }
 
-            const padding = max > 99 ? 3 : 2;
-            const formatted = num.toString().padStart(padding, '0');
+            // Анимация 
+            els.displayBox.classList.remove('fade-enter');
+            void els.displayBox.offsetWidth; 
+            els.displayBox.classList.add('fade-enter');
 
             // Отрисовка
-            els.display.textContent = formatted;
-            
-            els.display.className = 'main-display'; // Сброс классов
-            void els.display.offsetWidth; 
-            els.display.classList.add('fade-enter');
+            if (state.dataType === 'numbers') {
+                els.displayImg.style.display = 'none';
+                els.displayText.style.display = 'block';
+                
+                let max = parseInt(els.max.value) || 99;
+                const padding = max > 99 ? 3 : 2;
+                const formatted = currentItem.toString().padStart(padding, '0');
+                
+                els.displayText.textContent = formatted;
+                els.displayText.className = formatted.length > 2 ? 'small-font' : '';
+                
+                addToHistory(formatted, false);
+                speak(formatted, false, currentItem);
+            } else {
+                // Карты
+                els.displayText.style.display = 'none';
+                els.displayImg.style.display = 'block';
+                
+                els.displayImg.src = `https://deckofcardsapi.com/static/img/${currentItem}.png`;
+                
+                addToHistory(currentItem, true);
+                speak(currentItem, true);
+            }
 
-            if(formatted.length > 2) els.display.classList.add('small-font');
-
-            addToHistory(formatted);
-            speak(formatted, num);
             updateStatus();
         }
 
-        function addToHistory(val) {
-            state.history.unshift(val);
-            if (state.history.length > 10) state.history.pop();
+        function showEndScreen() {
+            els.displayImg.style.display = 'none';
+            els.displayText.style.display = 'block';
+            els.displayText.textContent = "ВСЁ";
+            els.displayText.className = 'text-font fade-enter';
+            speak("ВСЁ");
+            
+            if (state.autoInterval) toggleAuto();
+            buildDeck(); // Сразу готовим новую колоду
+            updateStatus();
+        }
+
+        // Форматирование истории
+        function addToHistory(val, isCard) {
+            let histObj = { text: val, isRed: false };
+            
+            if (isCard) {
+                const v = val[0];
+                const s = val[1];
+                histObj.text = `${valueSymbols[v]}${suitSymbols[s]}`;
+                if (redSuits.includes(s)) histObj.isRed = true;
+            }
+
+            state.history.unshift(histObj);
+            if (state.history.length > 8) state.history.pop();
             
             els.history.innerHTML = '';
             state.history.forEach((h, i) => {
                 const el = document.createElement('div');
                 el.className = 'history-item';
-                el.textContent = h;
+                if (h.isRed) el.classList.add('red');
+                el.textContent = h.text;
                 if(i > 0) {
                     el.style.transform = `scale(${1 - i*0.1})`;
                     el.style.opacity = 0.6 - i*0.1;
@@ -408,13 +488,50 @@
             });
         }
 
+        // --- Управление UI ---
+        function toggleDataType() {
+            state.dataType = state.dataType === 'numbers' ? 'cards' : 'numbers';
+            
+            if (state.dataType === 'cards') {
+                els.modeIcon.textContent = '🃏';
+                els.modeIcon.classList.add('active');
+                els.groupMin.style.display = 'none';
+                els.groupMax.style.display = 'none';
+            } else {
+                els.modeIcon.textContent = '🔢';
+                els.modeIcon.classList.remove('active');
+                els.groupMin.style.display = 'flex';
+                els.groupMax.style.display = 'flex';
+            }
+            
+            // Сброс при смене режима
+            state.history = [];
+            els.history.innerHTML = '';
+            if (state.uniqueMode) buildDeck();
+            
+            els.displayImg.style.display = 'none';
+            els.displayText.style.display = 'block';
+            els.displayText.textContent = "TAP";
+            els.displayText.className = '';
+            
+            updateStatus();
+        }
+
+        function toggleUnique() {
+            state.uniqueMode = !state.uniqueMode;
+            els.uniqueIcon.textContent = state.uniqueMode ? "🔀" : "♾️";
+            els.uniqueIcon.classList.toggle('active', state.uniqueMode);
+            
+            if (state.uniqueMode) buildDeck();
+            else state.deck = [];
+            updateStatus();
+        }
+
         function toggleMenu() {
             els.controls.classList.toggle('visible');
             if(els.controls.classList.contains('visible')) {
                 setTimeout(() => {
-                    if (document.activeElement.tagName !== 'INPUT') {
-                        els.controls.classList.remove('visible');
-                    }
+                    if (document.activeElement.tagName !== 'INPUT') els.controls.classList.remove('visible');
                 }, 4000);
             }
         }
@@ -442,25 +559,9 @@
             updateStatus();
         }
 
-        function toggleUnique() {
-            state.uniqueMode = !state.uniqueMode;
-            els.uniqueIcon.textContent = state.uniqueMode ? "🔀" : "♾️";
-            els.uniqueIcon.classList.toggle('active', state.uniqueMode);
-            
-            if (state.uniqueMode) {
-                buildDeck();
-            } else {
-                state.deck = [];
-            }
-            updateStatus();
-        }
-
         function handleMainTap() {
-            if (state.autoInterval) {
-                toggleAuto(); // Пауза
-            } else {
-                generate(); // Следующее число
-            }
+            if (state.autoInterval) toggleAuto();
+            else generate();
         }
 
         document.addEventListener('keydown', (e) => {
