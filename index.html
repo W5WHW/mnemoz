@@ -6,51 +6,39 @@
     <meta name="theme-color" content="#121212">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Mnemonic Zen 7.5</title>
+    <title>Mnemonic Zen PRO</title>
     
     <link rel="apple-touch-icon" href="https://img.icons8.com/nolan/180/brain.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/nolan/64/brain.png">
 
     <style>
         :root {
-            --bg: #121212;
-            --surface: #1e1e1e;
-            --surface-light: #2c2c2e;
-            --primary: #bb86fc;
-            --primary-variant: #3700b3;
-            --text: #e0e0e0;
-            --text-dim: #8e8e93;
-            --accent: #03dac6;
-            --red-suit: #ff4a4a;
+            --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2e;
+            --primary: #bb86fc; --text: #e0e0e0; --text-dim: #8e8e93;
+            --accent: #03dac6; --red-suit: #ff4a4a;
         }
 
         body {
             font-family: 'SF Mono', 'Roboto Mono', monospace;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            background: var(--bg); color: var(--text); margin: 0;
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+            transition: background 0.3s;
         }
+
+        /* --- Фантомный Режим (Слепой) --- */
+        body.phantom-mode { background: #000; }
+        body.phantom-mode .main-stage, body.phantom-mode .history-strip, body.phantom-mode .status-pill { opacity: 0 !important; pointer-events: none; }
 
         /* --- Верхняя панель (Шторка) --- */
         .trigger-zone { position: absolute; top: 0; width: 100%; height: 70px; z-index: 90; }
         
         .top-bar {
-            position: absolute;
-            top: 0; width: 100%;
+            position: absolute; top: 0; width: 100%;
             display: flex; justify-content: center; gap: 15px;
-            background: rgba(30, 30, 30, 0.95);
-            padding: 15px 10px;
-            backdrop-filter: blur(10px);
-            transform: translateY(-100%);
-            transition: transform 0.3s ease;
-            z-index: 100;
-            box-sizing: border-box;
+            background: rgba(30, 30, 30, 0.95); padding: 15px 10px;
+            backdrop-filter: blur(10px); transform: translateY(-100%);
+            transition: transform 0.3s ease; z-index: 100; box-sizing: border-box;
             border-bottom: 1px solid #333;
         }
         .top-bar.visible { transform: translateY(0); }
@@ -61,111 +49,125 @@
         }
         .icon-btn .icon { font-size: 1.6rem; margin-top: 5px; opacity: 0.6; transition: 0.2s; }
         .icon-btn .icon.active { opacity: 1; transform: scale(1.1); color: var(--accent); }
-        #iconMode.active { color: #ffb86c; }
-        #iconUnique.active { color: var(--primary); }
+        #iconMode.active { color: #ffb86c; } #iconUnique.active { color: var(--primary); }
 
-        /* --- Главный Экран --- */
+        /* --- Статус-таблетка (Слева вверху) --- */
+        .status-pill {
+            position: absolute; top: 15px; left: 15px;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--accent); padding: 5px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: bold; backdrop-filter: blur(5px);
+            opacity: 0; transition: opacity 0.3s; z-index: 80; pointer-events: none;
+            letter-spacing: 1px;
+        }
+        .status-pill.visible { opacity: 1; }
+
+        /* --- Главный Экран (С поддержкой чанкинга) --- */
         .main-stage {
-            flex: 1; display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            position: relative; z-index: 10; cursor: pointer;
+            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; z-index: 10; cursor: pointer; padding: 20px;
         }
         .main-stage:active { transform: scale(0.98); }
 
-        #displayData {
-            font-size: 12rem; font-weight: 700; color: var(--primary);
-            line-height: 1; letter-spacing: -5px; text-shadow: 0 0 40px rgba(187, 134, 252, 0.2);
-            transition: font-size 0.2s; text-align: center;
+        .items-container {
+            display: flex; gap: 15px; justify-content: center; align-items: center;
+            flex-wrap: wrap; text-align: center; width: 100%;
         }
-        #displayData.small { font-size: 8rem; letter-spacing: -2px; }
-        #displayData.start-text { font-size: 4rem; letter-spacing: 2px; color: var(--text-dim); }
+
+        .num-item {
+            font-size: 8rem; font-weight: 700; color: var(--primary);
+            line-height: 1; letter-spacing: -3px; text-shadow: 0 0 40px rgba(187, 134, 252, 0.2);
+        }
+        .num-item.small { font-size: 5rem; letter-spacing: -1px; }
+        .start-text { font-size: 3rem !important; letter-spacing: 2px !important; color: var(--text-dim) !important; width: 100%; }
         
-        #displayImg {
-            display: none; max-height: 55vh; max-width: 80vw;
-            border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        .card-item {
+            max-height: 45vh; max-width: 28vw; /* Чтобы влезало 3 штуки */
+            border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); object-fit: contain;
         }
 
         .fade-in { animation: fadeIn 0.15s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- Статус и История --- */
-        .status { margin-top: 10px; font-size: 0.8rem; color: var(--accent); font-weight: bold; opacity: 0; }
-        .status.visible { opacity: 1; }
-
+        /* --- История (Снизу) --- */
         .history-strip {
-            position: absolute; bottom: 80px; width: 100%; height: 60px;
+            position: absolute; bottom: 85px; width: 100%; height: 60px;
             display: flex; justify-content: center; align-items: center; gap: 15px;
             mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             pointer-events: none; transition: opacity 0.3s ease;
         }
-        .hist-item { font-size: 1.5rem; color: var(--text-dim); opacity: 0.5; transition: 0.3s; font-weight: 500;}
+        .hist-item { font-size: 1.3rem; color: var(--text-dim); opacity: 0.5; font-weight: 500;}
         .hist-item.red { color: var(--red-suit); }
-        .hist-item:first-child { font-size: 2rem; opacity: 1; color: var(--text); font-weight: bold; }
-        .hist-item.red:first-child { color: var(--red-suit); }
+        .hist-item:first-child { font-size: 1.8rem; opacity: 1; color: var(--text); font-weight: bold; }
 
-        /* --- Обновленная Кнопка проверки (Плавающая, Матовая) --- */
+        /* --- Новая Кнопка Проверки (Glassmorphism) --- */
         .verify-btn {
             position: absolute; bottom: 25px;
-            background: rgba(44, 44, 46, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text);
-            padding: 10px 22px; border-radius: 25px; font-size: 0.85rem; font-family: inherit;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text); padding: 12px 25px; border-radius: 30px;
+            font-size: 0.9rem; font-family: inherit; font-weight: bold;
             cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(15px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 20; font-weight: bold;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 20; display: flex; align-items: center; gap: 8px;
         }
         .verify-btn.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-        .verify-btn:active { transform: scale(0.95); background: rgba(44, 44, 46, 0.9); }
+        .verify-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
 
         /* --- Модальные Окна --- */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
             z-index: 1000; display: none; flex-direction: column; align-items: center;
-            padding-top: 50px; overflow-y: auto;
+            padding-top: 30px; overflow-y: auto; padding-bottom: 30px;
         }
         .modal.open { display: flex; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
 
         .modal-content {
-            background: var(--surface); width: 90%; max-width: 400px;
-            border-radius: 20px; padding: 20px; box-sizing: border-box; margin-bottom: 30px;
+            background: var(--surface); width: 92%; max-width: 450px;
+            border-radius: 20px; padding: 20px; box-sizing: border-box;
         }
         .modal-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; text-align: center; color: var(--primary); }
         
-        .setting-group { margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .setting-group h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--text-dim); }
-        .flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .setting-group { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .setting-group h3 { margin: 0 0 10px 0; font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;}
+        .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px;}
         
-        input[type="number"] {
-            background: var(--surface-light); border: none; color: white;
-            padding: 8px; border-radius: 8px; width: 60px; text-align: center; font-family: inherit;
+        input[type="number"], select {
+            background: var(--surface-light); border: 1px solid #444; color: white;
+            padding: 8px; border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none;
         }
         
         .checkbox-label {
             display: flex; align-items: center; gap: 5px; background: var(--surface-light);
-            padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;
+            padding: 8px 10px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; flex: 1; justify-content: center;
         }
-        input[type="checkbox"] { accent-color: var(--primary); transform: scale(1.2); }
+        .checkbox-label.block { justify-content: space-between; flex: 100%; }
+        input[type="checkbox"] { accent-color: var(--primary); transform: scale(1.1); }
         
-        select {
-            background: #1e1e1e; border: 1px solid #444; color: white;
-            padding: 5px 10px; border-radius: 6px; font-family: inherit; font-size: 0.85rem; outline: none;
+        textarea {
+            width: 100%; height: 80px; background: var(--surface-light); border: 1px solid #444;
+            color: white; border-radius: 8px; padding: 8px; box-sizing: border-box; font-family: inherit;
+            font-size: 0.8rem; resize: none; outline: none;
         }
 
         .btn-close {
             background: var(--primary); color: #000; border: none; padding: 12px;
-            width: 100%; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; font-family: inherit;
+            width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; font-family: inherit;
         }
 
-        /* --- Сетка проверки --- */
+        /* --- Сетка проверки и Таймер --- */
+        .recall-timer { text-align: center; color: var(--accent); font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
         .recall-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             gap: 10px; width: 100%; max-height: 50vh; overflow-y: auto; padding-right: 5px;
         }
+        .recall-cell-wrapper { display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .recall-cell {
             background: var(--surface-light); border: 1px solid #444; border-radius: 8px;
-            aspect-ratio: 1; display: flex; justify-content: center; align-items: center;
+            width: 100%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center;
             font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s;
             color: transparent; position: relative;
         }
@@ -173,9 +175,11 @@
         .recall-cell.revealed { background: #fff; color: #000; border-color: #fff; }
         .recall-cell.revealed::after { display: none; }
         .recall-cell.revealed.red { color: var(--red-suit); }
+        
+        .custom-image-label { font-size: 0.65rem; color: var(--accent); text-align: center; word-break: break-word; line-height: 1; min-height: 10px;}
 
         .action-row { display: flex; gap: 10px; margin-top: 20px; }
-        .action-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #333; color: white; font-family: inherit; cursor: pointer; }
+        .action-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #333; color: white; font-family: inherit; cursor: pointer; font-weight: bold;}
     </style>
 </head>
 <body>
@@ -190,31 +194,33 @@
         <div class="icon-btn" onclick="openSettings()"><span>Настр.</span><div class="icon">⚙️</div></div>
     </div>
 
+    <div class="status-pill" id="statusPill"></div>
+
     <div class="main-stage" id="stage" onclick="handleStageClick()">
-        <div id="displayData" class="start-text">СТАРТ</div>
-        <img id="displayImg" src="" alt="Card">
+        <div class="items-container" id="displayContainer">
+            <div class="num-item start-text fade-in">СТАРТ</div>
+        </div>
     </div>
     
-    <div class="status" id="status"></div>
     <div class="history-strip" id="history"></div>
     
     <button class="verify-btn" id="btnVerify" onclick="openRecall()">👁️ Проверить</button>
 
     <div class="modal" id="modalSettings">
         <div class="modal-content">
-            <div class="modal-title">Настройки Тренажера</div>
+            <div class="modal-title">Настройки PRO</div>
             
             <div class="setting-group" id="setNumbers">
-                <h3>🔢 Диапазон чисел</h3>
+                <h3>🔢 Диапазон</h3>
                 <div class="flex-row">
-                    <span>От:</span> <input type="number" id="inpMin" value="0">
-                    <span>До:</span> <input type="number" id="inpMax" value="99">
+                    <span>От:</span> <input type="number" id="inpMin" value="0" style="width: 50px;">
+                    <span>До:</span> <input type="number" id="inpMax" value="99" style="width: 50px;">
                 </div>
             </div>
 
             <div class="setting-group" id="setCards" style="display:none;">
                 <h3>🃏 Фильтр Карт</h3>
-                <div class="flex-row" style="margin-bottom: 10px;">
+                <div class="flex-row">
                     <label class="checkbox-label"><input type="checkbox" id="cS" checked> ♠</label>
                     <label class="checkbox-label"><input type="checkbox" id="cH" checked> ♥</label>
                     <label class="checkbox-label"><input type="checkbox" id="cD" checked> ♦</label>
@@ -228,14 +234,27 @@
             </div>
 
             <div class="setting-group">
+                <h3>⚡ Pro-Функции тренировки</h3>
+                <div class="flex-row">
+                    <span style="font-size: 0.85rem;">Показывать по (шт):</span>
+                    <select id="selChunk" style="width: 60px;">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+                <label class="checkbox-label block"><span>⏱ Секундомер сессии</span> <input type="checkbox" id="chkTimer" checked></label>
+                <label class="checkbox-label block"><span>📳 Вибрация (Haptic)</span> <input type="checkbox" id="chkHaptic" checked></label>
+                <label class="checkbox-label block"><span style="color: var(--primary);">👻 Режим "Фантом" (Слепой)</span> <input type="checkbox" id="chkPhantom"></label>
+            </div>
+
+            <div class="setting-group">
                 <h3>🖥 Интерфейс</h3>
-                <label class="checkbox-label" style="justify-content: space-between; margin-bottom: 8px;">
-                    <span>Показывать историю (снизу)</span>
-                    <input type="checkbox" id="chkHistory" checked onchange="updateUIPreferences()">
-                </label>
-                <div class="flex-row" style="justify-content: space-between; background: var(--surface-light); padding: 10px 12px; border-radius: 8px;">
-                    <span style="font-size: 0.85rem;">Кнопка «Проверить»</span>
-                    <select id="selVerify" onchange="updateUIPreferences()">
+                <label class="checkbox-label block"><span>Счетчик (в левом углу)</span> <input type="checkbox" id="chkPill" checked></label>
+                <label class="checkbox-label block"><span>История (лента снизу)</span> <input type="checkbox" id="chkHistory" checked></label>
+                <div class="flex-row" style="justify-content: space-between; background: var(--surface-light); padding: 8px; border-radius: 8px;">
+                    <span style="font-size: 0.8rem;">Кнопка "Проверить"</span>
+                    <select id="selVerify">
                         <option value="always">Всегда</option>
                         <option value="end">В конце</option>
                         <option value="hide">Скрыть</option>
@@ -244,9 +263,15 @@
             </div>
 
             <div class="setting-group">
-                <h3>⏱ Скорость (Авто)</h3>
-                <div class="flex-row">
-                    <input type="number" id="inpTimer" value="3.0" step="0.5"> <span>сек</span>
+                <h3>🧠 Свои образы (Опционально)</h3>
+                <p style="font-size: 0.7rem; color: var(--text-dim); margin: 0 0 5px 0;">Формат: 00=Бэтмен (с новой строки). Будут видны при проверке.</p>
+                <textarea id="inpImages" placeholder="01=Нео&#10;AS=Смерть&#10;QH=Роза"></textarea>
+            </div>
+
+            <div class="setting-group" style="border:none; margin-bottom: 0;">
+                <div class="flex-row" style="justify-content: center;">
+                    <span style="font-size: 0.9rem;">Скорость Авто:</span>
+                    <input type="number" id="inpTimer" value="3.0" step="0.5" style="width: 60px;"> сек
                 </div>
             </div>
 
@@ -257,7 +282,7 @@
     <div class="modal" id="modalRecall">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-title">Дворец Памяти</div>
-            <p style="font-size: 0.8rem; color: var(--text-dim); text-align: center; margin-top: -10px;">Тапай по карточкам, чтобы открыть</p>
+            <div class="recall-timer" id="recallTimerBox"></div>
             
             <div class="recall-grid" id="recallGrid"></div>
 
@@ -270,84 +295,123 @@
     </div>
 
     <script>
+        // --- Архитектура ---
         const UI = {
             topBar: document.getElementById('topBar'),
             stage: document.getElementById('stage'),
-            dData: document.getElementById('displayData'),
-            dImg: document.getElementById('displayImg'),
+            container: document.getElementById('displayContainer'),
             history: document.getElementById('history'),
-            status: document.getElementById('status'),
+            pill: document.getElementById('statusPill'),
             btnVerify: document.getElementById('btnVerify'),
             modals: { set: document.getElementById('modalSettings'), rec: document.getElementById('modalRecall') },
             icons: { mode: document.getElementById('iconMode'), unq: document.getElementById('iconUnique'), auto: document.getElementById('iconAuto'), snd: document.getElementById('iconSound') }
         };
 
-        let S = {
-            mode: 'numbers', unique: false, auto: null, sound: false, started: false,
-            deck: [], sessionSeq: [], histView: [], voices: [],
-            prefs: { showHistory: true, verifyMode: 'always' } // Новые настройки интерфейса
-        };
-
         const SUITS = { 'S':'♠', 'H':'♥', 'D':'♦', 'C':'♣' };
         const VALS = { '2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','0':'10','J':'В','Q':'Д','K':'К','A':'Т' };
         let allCardCodes = [];
-        ['S','H','D','C'].forEach(s => Object.keys(VALS).forEach(v => {
-            allCardCodes.push(v+s);
-            new Image().src = `https://deckofcardsapi.com/static/img/${v+s}.png`;
-        }));
+        ['S','H','D','C'].forEach(s => Object.keys(VALS).forEach(v => allCardCodes.push(v+s)));
+
+        // Предзагрузка
+        allCardCodes.forEach(c => new Image().src = `https://deckofcardsapi.com/static/img/${c}.png`);
+
+        let S = {
+            mode: 'numbers', unique: false, auto: null, sound: false, started: false,
+            deck: [], sessionSeq: [], histView: [], voices: [], customMap: {},
+            timeStart: null, timeEnd: null,
+            prefs: {} // Заполняется из UI
+        };
 
         if ('speechSynthesis' in window) {
             window.speechSynthesis.onvoiceschanged = () => S.voices = window.speechSynthesis.getVoices();
             setTimeout(() => window.speechSynthesis.getVoices(), 500);
         }
 
-        function speak(text, isCard, num) {
-            if (!S.sound || !('speechSynthesis' in window)) return;
-            try {
-                window.speechSynthesis.cancel();
-                let phrase = text;
-                if (text === "СТАРТ" || text === "ВСЁ") phrase = text === "ВСЁ" ? "Всё! Готово" : "Начинаем";
-                else if (isCard) {
-                    const sv = {'S':'пик','H':'червей','D':'бубен','C':'треф'};
-                    const vv = {'2':'Двойка','3':'Тройка','4':'Четверка','5':'Пятерка','6':'Шестерка','7':'Семерка','8':'Восьмерка','9':'Девятка','0':'Десятка','J':'Валет','Q':'Дама','K':'Король','A':'Туз'};
-                    phrase = `${vv[text[0]]} ${sv[text[1]]}`;
-                } else {
-                    if (text.startsWith('0') && text.length === 2 && num < 10 && num > 0) phrase = "Ноль " + num;
-                    else if (text === "00") phrase = "Ноль ноль";
-                    else if (text.length === 3 && text.startsWith('00')) phrase = "Ноль ноль " + parseInt(text);
-                    else if (text.length === 3 && text.startsWith('0')) phrase = "Ноль " + parseInt(text);
+        // --- Утилиты ---
+        function parseCustomImages() {
+            S.customMap = {};
+            const lines = document.getElementById('inpImages').value.split('\n');
+            lines.forEach(l => {
+                let parts = l.split('=');
+                if(parts.length === 2) {
+                    let key = parts[0].trim().toUpperCase();
+                    let val = parts[1].trim();
+                    if(key === '10') key = '0'; // Фикс для карт (10 = 0 в API)
+                    S.customMap[key] = val;
                 }
-                const ut = new SpeechSynthesisUtterance(phrase);
-                ut.lang = 'ru-RU';
-                const ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
-                if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
-                window.speechSynthesis.speak(ut);
-            } catch(e) {}
+            });
         }
 
-        // --- Управление видимостью UI ---
-        function updateUIPreferences() {
+        function vibrate(type) {
+            if(!S.prefs.haptic || !navigator.vibrate) return;
+            if(type === 'short') navigator.vibrate(40);
+            if(type === 'long') navigator.vibrate([100, 50, 100, 50, 200]);
+        }
+
+        function speak(textArr) {
+            if (!S.sound || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            
+            // Собираем текст для чанка (через точку для паузы)
+            let fullPhrase = textArr.map(item => {
+                let {text, isCard, num} = item;
+                if (text === "СТАРТ" || text === "ВСЁ") return text === "ВСЁ" ? "Всё! Готово" : "Начинаем";
+                if (isCard) {
+                    const sv = {'S':'пик','H':'червей','D':'бубен','C':'треф'};
+                    const vv = {'2':'Двойка','3':'Тройка','4':'Четверка','5':'Пятерка','6':'Шестерка','7':'Семерка','8':'Восьмерка','9':'Девятка','0':'Десятка','J':'Валет','Q':'Дама','K':'Король','A':'Туз'};
+                    return `${vv[text[0]]} ${sv[text[1]]}`;
+                } else {
+                    if (text.startsWith('0') && text.length === 2 && num < 10 && num > 0) return "Ноль " + num;
+                    if (text === "00") return "Ноль ноль";
+                    if (text.length === 3 && text.startsWith('00')) return "Ноль ноль " + parseInt(text);
+                    if (text.length === 3 && text.startsWith('0')) return "Ноль " + parseInt(text);
+                    return text;
+                }
+            }).join('. ');
+
+            const ut = new SpeechSynthesisUtterance(fullPhrase);
+            ut.lang = 'ru-RU'; ut.rate = 1.0;
+            const ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
+            if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
+            window.speechSynthesis.speak(ut);
+        }
+
+        // --- UI Настройки ---
+        function readPreferences() {
             S.prefs.showHistory = document.getElementById('chkHistory').checked;
+            S.prefs.showPill = document.getElementById('chkPill').checked;
             S.prefs.verifyMode = document.getElementById('selVerify').value;
+            S.prefs.chunkSize = parseInt(document.getElementById('selChunk').value);
+            S.prefs.timer = document.getElementById('chkTimer').checked;
+            S.prefs.haptic = document.getElementById('chkHaptic').checked;
+            S.prefs.phantom = document.getElementById('chkPhantom').checked;
+            
+            parseCustomImages();
 
-            if (S.prefs.showHistory) UI.history.style.opacity = '1';
-            else UI.history.style.opacity = '0';
-
-            checkVerifyVisibility();
+            UI.history.style.opacity = S.prefs.showHistory ? '1' : '0';
+            document.body.className = S.prefs.phantom ? 'phantom-mode' : '';
+            
+            updateStatus(); checkVerifyVisibility();
         }
 
         function checkVerifyVisibility(isFinished = false) {
-            if (!S.started || S.prefs.verifyMode === 'hide') {
-                UI.btnVerify.classList.remove('visible');
-                return;
-            }
-            if (S.prefs.verifyMode === 'always' || (S.prefs.verifyMode === 'end' && isFinished)) {
-                UI.btnVerify.classList.add('visible');
-            } else {
-                UI.btnVerify.classList.remove('visible');
-            }
+            if (!S.started || S.prefs.verifyMode === 'hide') { UI.btnVerify.classList.remove('visible'); return; }
+            if (S.prefs.verifyMode === 'always' || (S.prefs.verifyMode === 'end' && isFinished)) UI.btnVerify.classList.add('visible');
+            else UI.btnVerify.classList.remove('visible');
         }
 
+        function updateStatus() {
+            if(!S.prefs.showPill) { UI.pill.classList.remove('visible'); return; }
+            let txt = [];
+            if (S.auto) txt.push("▶ АВТО");
+            if (S.unique) txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
+            else if (S.started) txt.push(`В ПАМЯТИ: ${S.sessionSeq.length}`);
+            
+            UI.pill.textContent = txt.join(" | ");
+            UI.pill.classList.toggle('visible', txt.length > 0);
+        }
+
+        // --- Логика Генерации ---
         function buildDeck() {
             S.deck = [];
             if (S.mode === 'numbers') {
@@ -361,18 +425,12 @@
                 if(document.getElementById('cH').checked) sF.push('H');
                 if(document.getElementById('cD').checked) sF.push('D');
                 if(document.getElementById('cC').checked) sF.push('C');
-                
                 const rF = [];
                 if(document.getElementById('rLow').checked) rF.push('2','3','4','5');
                 if(document.getElementById('rMid').checked) rF.push('6','7','8','9','0');
                 if(document.getElementById('rHigh').checked) rF.push('J','Q','K','A');
 
                 S.deck = allCardCodes.filter(c => sF.includes(c[1]) && rF.includes(c[0]));
-                if(S.deck.length === 0) {
-                    alert("Включи хотя бы одну масть и значение!");
-                    document.getElementById('cS').checked = true; document.getElementById('rLow').checked = true;
-                    buildDeck(); return;
-                }
             }
             for (let i = S.deck.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -382,66 +440,78 @@
 
         function resetToStart() {
             if (S.auto) toggleAuto();
-            S.started = false; S.sessionSeq = []; S.histView = [];
+            S.started = false; S.sessionSeq = []; S.histView = []; S.timeStart = null; S.timeEnd = null;
             UI.history.innerHTML = ''; 
-            
-            UI.dImg.style.display = 'none'; UI.dData.style.display = 'block';
-            UI.dData.textContent = "СТАРТ"; UI.dData.className = 'start-text fade-in';
-            updateStatus();
-            checkVerifyVisibility();
+            UI.container.innerHTML = '<div class="num-item start-text fade-in">СТАРТ</div>';
+            updateStatus(); checkVerifyVisibility();
         }
-
-        function updateStatus() {
-            let txt = [];
-            if (S.auto) txt.push("▶ АВТО");
-            if (S.unique) txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
-            else if (S.started) txt.push(`В ПАМЯТИ: ${S.sessionSeq.length}`);
-            UI.status.textContent = txt.join(" | ");
-            if (txt.length) UI.status.classList.add('visible');
-         }
 
         function generate() {
-            if (!S.started) { S.started = true; if (S.unique) buildDeck(); checkVerifyVisibility(); }
-            let item;
-            if (S.unique) {
-                if (S.deck.length === 0) { finishSequence(); return; }
-                item = S.deck.pop();
-            } else {
-                if (S.mode === 'numbers') {
-                    let min = parseInt(document.getElementById('inpMin').value) || 0;
-                    let max = parseInt(document.getElementById('inpMax').value) || 99;
-                    if (min > max) [min, max] = [max, min];
-                    item = Math.floor(Math.random() * (max - min + 1)) + min;
+            if (!S.started) { 
+                S.started = true; 
+                S.timeStart = Date.now();
+                if (S.unique) buildDeck(); 
+                checkVerifyVisibility(); 
+            }
+
+            let chunkItems = [];
+            for(let i=0; i<S.prefs.chunkSize; i++) {
+                if (S.unique) {
+                    if (S.deck.length === 0) break;
+                    chunkItems.push(S.deck.pop());
                 } else {
-                    buildDeck(); item = S.deck[Math.floor(Math.random() * S.deck.length)];
+                    if (S.mode === 'numbers') {
+                        let min = parseInt(document.getElementById('inpMin').value) || 0;
+                        let max = parseInt(document.getElementById('inpMax').value) || 99;
+                        chunkItems.push(Math.floor(Math.random() * (Math.max(max, min) - Math.min(max, min) + 1)) + Math.min(max, min));
+                    } else {
+                        if(S.deck.length===0) buildDeck();
+                        chunkItems.push(S.deck[Math.floor(Math.random() * S.deck.length)]);
+                    }
                 }
             }
-            drawItem(item);
+
+            if(chunkItems.length === 0) { finishSequence(); return; }
+            drawItems(chunkItems);
         }
 
-        function drawItem(item) {
-            UI.dData.classList.remove('fade-in'); void UI.dData.offsetWidth;
-            let histObj = { raw: item, text: '', isRed: false, isCard: S.mode === 'cards' };
+        function drawItems(items) {
+            UI.container.innerHTML = '';
+            let speakArr = [];
 
-            if (S.mode === 'numbers') {
-                UI.dImg.style.display = 'none'; UI.dData.style.display = 'block';
-                let max = parseInt(document.getElementById('inpMax').value) || 99;
-                const txt = item.toString().padStart(max > 99 ? 3 : 2, '0');
-                UI.dData.textContent = txt;
-                UI.dData.className = txt.length > 2 ? 'small fade-in' : 'fade-in';
-                histObj.text = txt; speak(txt, false, item);
-            } else {
-                UI.dData.style.display = 'none'; UI.dImg.style.display = 'block';
-                UI.dImg.src = `https://deckofcardsapi.com/static/img/${item}.png`;
-                histObj.text = `${VALS[item[0]]}${SUITS[item[1]]}`;
-                histObj.isRed = ['H','D'].includes(item[1]);
-                speak(item, true);
-            }
+            items.forEach(item => {
+                let histObj = { raw: item, text: '', isRed: false, isCard: S.mode === 'cards', customText: '' };
+                
+                if (S.mode === 'numbers') {
+                    let max = parseInt(document.getElementById('inpMax').value) || 99;
+                    const txt = item.toString().padStart(max > 99 ? 3 : 2, '0');
+                    histObj.text = txt; histObj.customText = S.customMap[txt] || '';
+                    speakArr.push({text: txt, isCard: false, num: item});
 
-            S.sessionSeq.push(histObj);
-            S.histView.unshift(histObj);
+                    let div = document.createElement('div');
+                    div.className = `num-item fade-in ${S.prefs.chunkSize > 1 || txt.length > 2 ? 'small' : ''}`;
+                    div.textContent = txt;
+                    UI.container.appendChild(div);
+                } else {
+                    histObj.text = `${VALS[item[0]]}${SUITS[item[1]]}`;
+                    histObj.isRed = ['H','D'].includes(item[1]);
+                    // Для карт ключ в мапе может быть "AS", "0C" (10 треф)
+                    let mapKey = item[0] === '0' ? '10'+item[1] : item;
+                    histObj.customText = S.customMap[mapKey] || S.customMap[item[0]] || ''; // Поиск точной карты или просто ранга
+                    
+                    speakArr.push({text: item, isCard: true});
+
+                    let img = document.createElement('img');
+                    img.className = 'card-item fade-in';
+                    img.src = `https://deckofcardsapi.com/static/img/${item}.png`;
+                    if(S.prefs.chunkSize === 3) img.style.maxWidth = '25vw';
+                    UI.container.appendChild(img);
+                }
+                S.sessionSeq.push(histObj);
+                S.histView.unshift(histObj);
+            });
+
             if (S.histView.length > 7) S.histView.pop();
-            
             UI.history.innerHTML = '';
             S.histView.forEach((h, i) => {
                 let el = document.createElement('div');
@@ -450,21 +520,25 @@
                 if(i>0) { el.style.transform = `scale(${1 - i*0.1})`; el.style.opacity = 0.6 - i*0.1; }
                 UI.history.appendChild(el);
             });
+
+            vibrate('short');
+            speak(speakArr);
             updateStatus();
         }
 
         function finishSequence() {
             if(S.auto) toggleAuto();
-            UI.dImg.style.display = 'none'; UI.dData.style.display = 'block';
-            UI.dData.textContent = "ВСЁ"; UI.dData.className = 'start-text fade-in';
-            speak("ВСЁ"); updateStatus();
-            checkVerifyVisibility(true); // Форсируем показ кнопки, если режим "В конце"
+            S.timeEnd = Date.now();
+            UI.container.innerHTML = '<div class="num-item start-text fade-in">ВСЁ</div>';
+            vibrate('long'); speak([{text: "ВСЁ"}]); 
+            updateStatus(); checkVerifyVisibility(true);
         }
 
+        // --- Управление ---
         function toggleMenu() {
             UI.topBar.classList.toggle('visible');
             if(UI.topBar.classList.contains('visible')) {
-                setTimeout(() => { if (document.activeElement.tagName !== 'INPUT') UI.topBar.classList.remove('visible'); }, 5000);
+                setTimeout(() => { if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') UI.topBar.classList.remove('visible'); }, 5000);
             }
         }
 
@@ -475,7 +549,6 @@
             document.getElementById('setNumbers').style.display = S.mode === 'numbers' ? 'block' : 'none';
             document.getElementById('setCards').style.display = S.mode === 'cards' ? 'block' : 'none';
             
-            // Умное переключение режимов
             if (S.mode === 'cards' && !S.unique) toggleUnique();
             resetToStart();
         }
@@ -514,27 +587,43 @@
         }
 
         function openSettings() { UI.modals.set.classList.add('open'); if(S.auto) toggleAuto(); }
-        function closeSettings() { 
-            UI.modals.set.classList.remove('open'); 
-            updateUIPreferences(); 
-            resetToStart(); 
-        }
+        function closeSettings() { UI.modals.set.classList.remove('open'); readPreferences(); resetToStart(); }
 
+        // --- Модалка Проверки ---
         function openRecall() {
             if(S.auto) toggleAuto();
+            
+            // Таймер
+            let timeText = "";
+            if(S.prefs.timer && S.timeStart) {
+                let end = S.timeEnd || Date.now();
+                let sec = Math.floor((end - S.timeStart) / 1000);
+                let m = Math.floor(sec/60); let s = sec%60;
+                timeText = `⏱ Время: ${m > 0 ? m+' м ' : ''}${s} с`;
+            }
+            document.getElementById('recallTimerBox').textContent = timeText;
+
             const grid = document.getElementById('recallGrid'); grid.innerHTML = '';
             S.sessionSeq.forEach(item => {
+                let wrap = document.createElement('div'); wrap.className = 'recall-cell-wrapper';
+                
                 const cell = document.createElement('div');
                 cell.className = 'recall-cell'; cell.textContent = item.text;
                 if (item.isRed) cell.dataset.red = "true";
                 cell.onclick = function() { this.classList.add('revealed'); if (this.dataset.red) this.classList.add('red'); };
-                grid.appendChild(cell);
+                wrap.appendChild(cell);
+
+                if (item.customText) {
+                    let lbl = document.createElement('div'); lbl.className = 'custom-image-label';
+                    lbl.textContent = item.customText; wrap.appendChild(lbl);
+                }
+
+                grid.appendChild(wrap);
             });
             UI.modals.rec.classList.add('open');
         }
 
         function closeRecall() { UI.modals.rec.classList.remove('open'); }
-        
         function revealAll() {
             document.querySelectorAll('.recall-cell').forEach(c => {
                 c.classList.add('revealed'); if (c.dataset.red) c.classList.add('red');
@@ -542,12 +631,14 @@
         }
 
         function exportData() {
-            let date = new Date().toLocaleString('ru-RU');
-            let type = S.mode === 'numbers' ? 'Числа' : 'Карты';
-            let str = `## Тренировка (${type}) - ${date}\n\n**Последовательность:**\n`;
-            str += S.sessionSeq.map(i => i.text).join(' - ') + `\n\n*Элементов в памяти: ${S.sessionSeq.length}*`;
-            try { navigator.clipboard.writeText(str).then(() => alert("Скопировано для Zettelkasten!")); } 
-            catch(e) { alert("Ошибка копирования."); }
+            let str = `## Тренировка (${S.mode === 'numbers' ? 'Числа' : 'Карты'})\n`;
+            if(S.prefs.timer && S.timeStart) {
+                let sec = Math.floor(((S.timeEnd || Date.now()) - S.timeStart) / 1000);
+                str += `⏱ Время: ${sec} сек.\n`;
+            }
+            str += `\n**Последовательность (${S.sessionSeq.length}):**\n`;
+            str += S.sessionSeq.map(i => i.customText ? `${i.text}(${i.customText})` : i.text).join(' - ');
+            try { navigator.clipboard.writeText(str).then(() => alert("Скопировано!")); } catch(e) {}
         }
 
         document.addEventListener('keydown', (e) => {
@@ -555,8 +646,7 @@
             if(e.code === 'KeyA') toggleAuto();
         });
 
-        // Инициализация стартовых настроек
-        updateUIPreferences();
+        readPreferences(); // Init
     </script>
 </body>
 </html>
