@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#121212">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Mnemonic Zen PRO</title>
+    <title>Mnemonic Zen 8.0</title>
     
     <link rel="apple-touch-icon" href="https://img.icons8.com/nolan/180/brain.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/nolan/64/brain.png">
@@ -26,17 +26,16 @@
             transition: background 0.3s;
         }
 
-        /* --- Фантомный Режим (Слепой) --- */
         body.phantom-mode { background: #000; }
         body.phantom-mode .main-stage, body.phantom-mode .history-strip, body.phantom-mode .status-pill { opacity: 0 !important; pointer-events: none; }
 
-        /* --- Верхняя панель (Шторка) --- */
+        /* --- Шторка --- */
         .trigger-zone { position: absolute; top: 0; width: 100%; height: 70px; z-index: 90; }
         
         .top-bar {
             position: absolute; top: 0; width: 100%;
-            display: flex; justify-content: center; gap: 15px;
-            background: rgba(30, 30, 30, 0.95); padding: 15px 10px;
+            display: flex; justify-content: center; gap: 12px;
+            background: rgba(30, 30, 30, 0.95); padding: 15px 5px;
             backdrop-filter: blur(10px); transform: translateY(-100%);
             transition: transform 0.3s ease; z-index: 100; box-sizing: border-box;
             border-bottom: 1px solid #333;
@@ -45,13 +44,13 @@
 
         .icon-btn {
             display: flex; flex-direction: column; align-items: center;
-            font-size: 0.7rem; color: var(--text-dim); cursor: pointer; width: 50px;
+            font-size: 0.65rem; color: var(--text-dim); cursor: pointer; width: 50px;
         }
         .icon-btn .icon { font-size: 1.6rem; margin-top: 5px; opacity: 0.6; transition: 0.2s; }
         .icon-btn .icon.active { opacity: 1; transform: scale(1.1); color: var(--accent); }
-        #iconMode.active { color: #ffb86c; } #iconUnique.active { color: var(--primary); }
+        #iconMode.active { color: #ffb86c; } 
+        #iconUnique.active { color: var(--primary); }
 
-        /* --- Статус-таблетка (Слева вверху) --- */
         .status-pill {
             position: absolute; top: 15px; left: 15px;
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
@@ -62,7 +61,7 @@
         }
         .status-pill.visible { opacity: 1; }
 
-        /* --- Главный Экран (С поддержкой чанкинга) --- */
+        /* --- Главный Экран --- */
         .main-stage {
             flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
             position: relative; z-index: 10; cursor: pointer; padding: 20px;
@@ -70,26 +69,36 @@
         .main-stage:active { transform: scale(0.98); }
 
         .items-container {
-            display: flex; gap: 15px; justify-content: center; align-items: center;
-            flex-wrap: wrap; text-align: center; width: 100%;
+            display: flex; flex-direction: column; gap: 15px; justify-content: center; align-items: center;
+            text-align: center; width: 100%;
         }
+
+        .chunks-row { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
 
         .num-item {
             font-size: 8rem; font-weight: 700; color: var(--primary);
             line-height: 1; letter-spacing: -3px; text-shadow: 0 0 40px rgba(187, 134, 252, 0.2);
         }
         .num-item.small { font-size: 5rem; letter-spacing: -1px; }
+        .num-item.phone { font-size: 10vw; letter-spacing: 0px; color: var(--accent); } /* Адаптивный размер для телефона */
+        
         .start-text { font-size: 3rem !important; letter-spacing: 2px !important; color: var(--text-dim) !important; width: 100%; }
         
-        .card-item {
-            max-height: 45vh; max-width: 28vw; /* Чтобы влезало 3 штуки */
-            border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); object-fit: contain;
-        }
+        .card-item { max-height: 45vh; max-width: 28vw; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); object-fit: contain; }
 
         .fade-in { animation: fadeIn 0.15s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- История (Снизу) --- */
+        /* --- Кнопка Повтора (Replay) --- */
+        .replay-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; font-size: 1rem; padding: 10px 20px; border-radius: 20px;
+            margin-top: 20px; cursor: pointer; display: none; backdrop-filter: blur(5px);
+            display: flex; align-items: center; gap: 8px; font-family: inherit;
+        }
+        .replay-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
+
+        /* --- История --- */
         .history-strip {
             position: absolute; bottom: 85px; width: 100%; height: 60px;
             display: flex; justify-content: center; align-items: center; gap: 15px;
@@ -99,9 +108,11 @@
         }
         .hist-item { font-size: 1.3rem; color: var(--text-dim); opacity: 0.5; font-weight: 500;}
         .hist-item.red { color: var(--red-suit); }
+        .hist-item.phone { font-size: 1rem; letter-spacing: 1px; }
         .hist-item:first-child { font-size: 1.8rem; opacity: 1; color: var(--text); font-weight: bold; }
+        .hist-item.phone:first-child { font-size: 1.3rem; }
 
-        /* --- Новая Кнопка Проверки (Glassmorphism) --- */
+        /* --- Кнопка Проверки --- */
         .verify-btn {
             position: absolute; bottom: 25px;
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
@@ -109,8 +120,7 @@
             font-size: 0.9rem; font-family: inherit; font-weight: bold;
             cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(15px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 20; display: flex; align-items: center; gap: 8px;
+            backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 20; display: flex; align-items: center; gap: 8px;
         }
         .verify-btn.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .verify-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
@@ -118,9 +128,8 @@
         /* --- Модальные Окна --- */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
-            z-index: 1000; display: none; flex-direction: column; align-items: center;
-            padding-top: 30px; overflow-y: auto; padding-bottom: 30px;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); z-index: 1000; display: none; 
+            flex-direction: column; align-items: center; padding-top: 30px; overflow-y: auto; padding-bottom: 30px;
         }
         .modal.open { display: flex; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
@@ -158,19 +167,24 @@
             width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; font-family: inherit;
         }
 
-        /* --- Сетка проверки и Таймер --- */
+        /* --- Сетка проверки --- */
         .recall-timer { text-align: center; color: var(--accent); font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
         .recall-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             gap: 10px; width: 100%; max-height: 50vh; overflow-y: auto; padding-right: 5px;
         }
+        /* Для телефонов ячейки шире */
+        .recall-grid.phones { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+        
         .recall-cell-wrapper { display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .recall-cell {
             background: var(--surface-light); border: 1px solid #444; border-radius: 8px;
             width: 100%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center;
             font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s;
-            color: transparent; position: relative;
+            color: transparent; position: relative; text-align: center;
         }
+        .recall-grid.phones .recall-cell { aspect-ratio: auto; padding: 15px 5px; font-size: 0.9rem; letter-spacing: 0.5px;}
+
         .recall-cell::after { content: "?"; position: absolute; color: var(--text-dim); font-size: 1.5rem; }
         .recall-cell.revealed { background: #fff; color: #000; border-color: #fff; }
         .recall-cell.revealed::after { display: none; }
@@ -188,7 +202,7 @@
 
     <div class="top-bar" id="topBar">
         <div class="icon-btn" onclick="toggleMode()"><span>Тип</span><div class="icon" id="iconMode">🔢</div></div>
-        <div class="icon-btn" onclick="toggleUnique()"><span>Режим</span><div class="icon" id="iconUnique">♾️</div></div>
+        <div class="icon-btn" onclick="toggleUnique()" id="btnUnique"><span>Режим</span><div class="icon" id="iconUnique">♾️</div></div>
         <div class="icon-btn" onclick="toggleAuto()"><span>Авто</span><div class="icon" id="iconAuto">▶️</div></div>
         <div class="icon-btn" onclick="toggleSound()"><span>Звук</span><div class="icon" id="iconSound">🔇</div></div>
         <div class="icon-btn" onclick="openSettings()"><span>Настр.</span><div class="icon">⚙️</div></div>
@@ -200,10 +214,10 @@
         <div class="items-container" id="displayContainer">
             <div class="num-item start-text fade-in">СТАРТ</div>
         </div>
+        <div class="replay-btn" id="btnReplay" onclick="replayAudio(event)">🔁 Послушать еще раз</div>
     </div>
     
     <div class="history-strip" id="history"></div>
-    
     <button class="verify-btn" id="btnVerify" onclick="openRecall()">👁️ Проверить</button>
 
     <div class="modal" id="modalSettings">
@@ -233,24 +247,41 @@
                 </div>
             </div>
 
-            <div class="setting-group">
-                <h3>⚡ Pro-Функции тренировки</h3>
+            <div class="setting-group" id="setPhones" style="display:none;">
+                <h3>📱 Телефоны (РФ / КЗ)</h3>
                 <div class="flex-row">
+                    <select id="selPhoneRegion" style="flex:1;">
+                        <option value="rnd">🎲 Вперемешку (РФ+КЗ)</option>
+                        <option value="ru">🇷🇺 РФ (+7 9xx)</option>
+                        <option value="kz">🇰🇿 КЗ (+7 7xx)</option>
+                    </select>
+                </div>
+                <div class="flex-row" style="margin-top: 10px;">
+                    <span style="font-size: 0.8rem;">Пауза между блоками:</span>
+                    <input type="number" id="inpPhonePause" value="1.0" step="0.5" style="width: 50px;"> <span style="font-size: 0.8rem;">сек</span>
+                </div>
+                <div class="flex-row">
+                    <span style="font-size: 0.8rem;">Темп речи диктора:</span>
+                    <input type="number" id="inpPhoneRate" value="1.0" step="0.1" style="width: 50px;">
+                </div>
+            </div>
+
+            <div class="setting-group" id="setGeneralOpts">
+                <h3>⚡ Функции тренировки</h3>
+                <div class="flex-row" id="chunkRow">
                     <span style="font-size: 0.85rem;">Показывать по (шт):</span>
                     <select id="selChunk" style="width: 60px;">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
+                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
                     </select>
                 </div>
                 <label class="checkbox-label block"><span>⏱ Секундомер сессии</span> <input type="checkbox" id="chkTimer" checked></label>
                 <label class="checkbox-label block"><span>📳 Вибрация (Haptic)</span> <input type="checkbox" id="chkHaptic" checked></label>
-                <label class="checkbox-label block"><span style="color: var(--primary);">👻 Режим "Фантом" (Слепой)</span> <input type="checkbox" id="chkPhantom"></label>
+                <label class="checkbox-label block"><span style="color: var(--primary);">👻 Слепой режим (Фантом)</span> <input type="checkbox" id="chkPhantom"></label>
             </div>
 
             <div class="setting-group">
                 <h3>🖥 Интерфейс</h3>
-                <label class="checkbox-label block"><span>Счетчик (в левом углу)</span> <input type="checkbox" id="chkPill" checked></label>
+                <label class="checkbox-label block"><span>Счетчик (в углу)</span> <input type="checkbox" id="chkPill" checked></label>
                 <label class="checkbox-label block"><span>История (лента снизу)</span> <input type="checkbox" id="chkHistory" checked></label>
                 <div class="flex-row" style="justify-content: space-between; background: var(--surface-light); padding: 8px; border-radius: 8px;">
                     <span style="font-size: 0.8rem;">Кнопка "Проверить"</span>
@@ -262,15 +293,14 @@
                 </div>
             </div>
 
-            <div class="setting-group">
+            <div class="setting-group" id="setCustomImages">
                 <h3>🧠 Свои образы (Опционально)</h3>
-                <p style="font-size: 0.7rem; color: var(--text-dim); margin: 0 0 5px 0;">Формат: 00=Бэтмен (с новой строки). Будут видны при проверке.</p>
-                <textarea id="inpImages" placeholder="01=Нео&#10;AS=Смерть&#10;QH=Роза"></textarea>
+                <textarea id="inpImages" placeholder="01=Нео&#10;AS=Смерть"></textarea>
             </div>
 
             <div class="setting-group" style="border:none; margin-bottom: 0;">
                 <div class="flex-row" style="justify-content: center;">
-                    <span style="font-size: 0.9rem;">Скорость Авто:</span>
+                    <span style="font-size: 0.9rem;">Скорость Авто (След. экран):</span>
                     <input type="number" id="inpTimer" value="3.0" step="0.5" style="width: 60px;"> сек
                 </div>
             </div>
@@ -295,31 +325,28 @@
     </div>
 
     <script>
-        // --- Архитектура ---
         const UI = {
-            topBar: document.getElementById('topBar'),
-            stage: document.getElementById('stage'),
-            container: document.getElementById('displayContainer'),
-            history: document.getElementById('history'),
-            pill: document.getElementById('statusPill'),
-            btnVerify: document.getElementById('btnVerify'),
+            topBar: document.getElementById('topBar'), stage: document.getElementById('stage'),
+            container: document.getElementById('displayContainer'), history: document.getElementById('history'),
+            pill: document.getElementById('statusPill'), btnVerify: document.getElementById('btnVerify'),
+            btnReplay: document.getElementById('btnReplay'), btnUnique: document.getElementById('btnUnique'),
             modals: { set: document.getElementById('modalSettings'), rec: document.getElementById('modalRecall') },
-            icons: { mode: document.getElementById('iconMode'), unq: document.getElementById('iconUnique'), auto: document.getElementById('iconAuto'), snd: document.getElementById('iconSound') }
+            icons: { mode: document.getElementById('iconMode'), unq: document.getElementById('iconUnique'), auto: document.getElementById('iconAuto'), snd: document.getElementById('iconSound') },
+            blocks: { num: document.getElementById('setNumbers'), card: document.getElementById('setCards'), phone: document.getElementById('setPhones'), customImg: document.getElementById('setCustomImages'), chunkRow: document.getElementById('chunkRow') }
         };
 
         const SUITS = { 'S':'♠', 'H':'♥', 'D':'♦', 'C':'♣' };
         const VALS = { '2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','0':'10','J':'В','Q':'Д','K':'К','A':'Т' };
         let allCardCodes = [];
         ['S','H','D','C'].forEach(s => Object.keys(VALS).forEach(v => allCardCodes.push(v+s)));
-
-        // Предзагрузка
         allCardCodes.forEach(c => new Image().src = `https://deckofcardsapi.com/static/img/${c}.png`);
 
         let S = {
-            mode: 'numbers', unique: false, auto: null, sound: false, started: false,
+            mode: 'numbers', // 'numbers', 'cards', 'phones'
+            unique: false, auto: null, sound: false, started: false,
             deck: [], sessionSeq: [], histView: [], voices: [], customMap: {},
-            timeStart: null, timeEnd: null,
-            prefs: {} // Заполняется из UI
+            timeStart: null, timeEnd: null, prefs: {},
+            currentAudioChunks: [], audioTimeouts: [] // Для правильных пауз в телефонах
         };
 
         if ('speechSynthesis' in window) {
@@ -332,65 +359,98 @@
             S.customMap = {};
             const lines = document.getElementById('inpImages').value.split('\n');
             lines.forEach(l => {
-                let parts = l.split('=');
-                if(parts.length === 2) {
-                    let key = parts[0].trim().toUpperCase();
-                    let val = parts[1].trim();
-                    if(key === '10') key = '0'; // Фикс для карт (10 = 0 в API)
-                    S.customMap[key] = val;
+                let p = l.split('=');
+                if(p.length === 2) {
+                    let k = p[0].trim().toUpperCase(); if(k==='10') k='0';
+                    S.customMap[k] = p[1].trim();
                 }
             });
         }
 
         function vibrate(type) {
             if(!S.prefs.haptic || !navigator.vibrate) return;
-            if(type === 'short') navigator.vibrate(40);
+            if(type === 'short') navigator.vibrate(30);
             if(type === 'long') navigator.vibrate([100, 50, 100, 50, 200]);
         }
 
-        function speak(textArr) {
-            if (!S.sound || !('speechSynthesis' in window)) return;
+        // Умная озвучка с поддержкой пауз между чанками номера телефона
+        function stopAudio() {
             window.speechSynthesis.cancel();
-            
-            // Собираем текст для чанка (через точку для паузы)
-            let fullPhrase = textArr.map(item => {
-                let {text, isCard, num} = item;
-                if (text === "СТАРТ" || text === "ВСЁ") return text === "ВСЁ" ? "Всё! Готово" : "Начинаем";
-                if (isCard) {
-                    const sv = {'S':'пик','H':'червей','D':'бубен','C':'треф'};
-                    const vv = {'2':'Двойка','3':'Тройка','4':'Четверка','5':'Пятерка','6':'Шестерка','7':'Семерка','8':'Восьмерка','9':'Девятка','0':'Десятка','J':'Валет','Q':'Дама','K':'Король','A':'Туз'};
-                    return `${vv[text[0]]} ${sv[text[1]]}`;
-                } else {
-                    if (text.startsWith('0') && text.length === 2 && num < 10 && num > 0) return "Ноль " + num;
-                    if (text === "00") return "Ноль ноль";
-                    if (text.length === 3 && text.startsWith('00')) return "Ноль ноль " + parseInt(text);
-                    if (text.length === 3 && text.startsWith('0')) return "Ноль " + parseInt(text);
-                    return text;
-                }
-            }).join('. ');
-
-            const ut = new SpeechSynthesisUtterance(fullPhrase);
-            ut.lang = 'ru-RU'; ut.rate = 1.0;
-            const ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
-            if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
-            window.speechSynthesis.speak(ut);
+            S.audioTimeouts.forEach(t => clearTimeout(t));
+            S.audioTimeouts = [];
         }
 
-        // --- UI Настройки ---
+        function playAudioSequence(chunks) {
+            if (!S.sound || !('speechSynthesis' in window)) return;
+            stopAudio();
+            
+            let rate = S.mode === 'phones' ? parseFloat(document.getElementById('inpPhoneRate').value) || 1.0 : 1.0;
+            let pauseMs = S.mode === 'phones' ? (parseFloat(document.getElementById('inpPhonePause').value) || 0) * 1000 : 0;
+            
+            S.currentAudioChunks = chunks; // Сохраняем для реплея
+
+            const playNext = (index) => {
+                if(index >= chunks.length) return;
+                
+                let item = chunks[index];
+                let phrase = item.text;
+
+                if (phrase === "СТАРТ" || phrase === "ВСЁ") phrase = phrase === "ВСЁ" ? "Всё! Готово" : "Начинаем";
+                else if (item.isCard) {
+                    const sv = {'S':'пик','H':'червей','D':'бубен','C':'треф'};
+                    const vv = {'2':'Двойка','3':'Тройка','4':'Четверка','5':'Пятерка','6':'Шестерка','7':'Семерка','8':'Восьмерка','9':'Девятка','0':'Десятка','J':'Валет','Q':'Дама','K':'Король','A':'Туз'};
+                    phrase = `${vv[item.text[0]]} ${sv[item.text[1]]}`;
+                } else {
+                    let num = parseInt(item.text);
+                    if (item.text.startsWith('0') && item.text.length === 2 && num < 10 && num > 0) phrase = "Ноль " + num;
+                    else if (item.text === "00") phrase = "Ноль ноль";
+                    else if (item.text === "000") phrase = "Ноль ноль ноль";
+                    else if (item.text.length === 3 && item.text.startsWith('00')) phrase = "Ноль ноль " + parseInt(item.text);
+                    else if (item.text.length === 3 && item.text.startsWith('0')) phrase = "Ноль " + parseInt(item.text);
+                }
+
+                let ut = new SpeechSynthesisUtterance(phrase);
+                ut.lang = 'ru-RU'; ut.rate = rate;
+                let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
+                if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
+                
+                ut.onend = () => {
+                    if(index + 1 < chunks.length) {
+                        let t = setTimeout(() => playNext(index + 1), pauseMs);
+                        S.audioTimeouts.push(t);
+                    }
+                };
+                window.speechSynthesis.speak(ut);
+            };
+
+            playNext(0);
+        }
+
+        window.replayAudio = function(e) {
+            e.stopPropagation(); // Чтобы не сработал клик по экрану
+            vibrate('short');
+            if(S.currentAudioChunks && S.currentAudioChunks.length > 0) {
+                playAudioSequence(S.currentAudioChunks);
+            }
+        }
+
+        // --- Настройки ---
         function readPreferences() {
             S.prefs.showHistory = document.getElementById('chkHistory').checked;
             S.prefs.showPill = document.getElementById('chkPill').checked;
             S.prefs.verifyMode = document.getElementById('selVerify').value;
-            S.prefs.chunkSize = parseInt(document.getElementById('selChunk').value);
+            S.prefs.chunkSize = S.mode === 'phones' ? 1 : parseInt(document.getElementById('selChunk').value);
             S.prefs.timer = document.getElementById('chkTimer').checked;
             S.prefs.haptic = document.getElementById('chkHaptic').checked;
             S.prefs.phantom = document.getElementById('chkPhantom').checked;
             
             parseCustomImages();
-
             UI.history.style.opacity = S.prefs.showHistory ? '1' : '0';
             document.body.className = S.prefs.phantom ? 'phantom-mode' : '';
             
+            // Кнопка реплея видна только если включен звук (или это режим телефонов, где звук критичен)
+            UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) && S.started ? 'flex' : 'none';
+
             updateStatus(); checkVerifyVisibility();
         }
 
@@ -404,14 +464,32 @@
             if(!S.prefs.showPill) { UI.pill.classList.remove('visible'); return; }
             let txt = [];
             if (S.auto) txt.push("▶ АВТО");
-            if (S.unique) txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
+            if (S.mode !== 'phones' && S.unique) txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
             else if (S.started) txt.push(`В ПАМЯТИ: ${S.sessionSeq.length}`);
             
             UI.pill.textContent = txt.join(" | ");
             UI.pill.classList.toggle('visible', txt.length > 0);
         }
 
-        // --- Логика Генерации ---
+        // --- Генерация ---
+        function generatePhone() {
+            let region = document.getElementById('selPhoneRegion').value;
+            if (region === 'rnd') region = Math.random() > 0.5 ? 'ru' : 'kz';
+            
+            let p1 = region === 'ru' 
+                ? '9' + Math.floor(Math.random()*10) + Math.floor(Math.random()*10)
+                : '7' + ['0','4','5','7'][Math.floor(Math.random()*4)] + Math.floor(Math.random()*10);
+            
+            let p2 = String(Math.floor(Math.random()*1000)).padStart(3, '0');
+            let p3 = String(Math.floor(Math.random()*100)).padStart(2, '0');
+            let p4 = String(Math.floor(Math.random()*100)).padStart(2, '0');
+            
+            return {
+                formatted: `+7 (${p1}) ${p2}-${p3}-${p4}`,
+                audioChunks: [{text: p1}, {text: p2}, {text: p3}, {text: p4}]
+            };
+        }
+
         function buildDeck() {
             S.deck = [];
             if (S.mode === 'numbers') {
@@ -419,7 +497,7 @@
                 let max = parseInt(document.getElementById('inpMax').value) || 99;
                 if (min > max) [min, max] = [max, min];
                 for (let i = min; i <= max; i++) S.deck.push(i);
-            } else {
+            } else if (S.mode === 'cards') {
                 const sF = [];
                 if(document.getElementById('cS').checked) sF.push('S');
                 if(document.getElementById('cH').checked) sF.push('H');
@@ -429,7 +507,6 @@
                 if(document.getElementById('rLow').checked) rF.push('2','3','4','5');
                 if(document.getElementById('rMid').checked) rF.push('6','7','8','9','0');
                 if(document.getElementById('rHigh').checked) rF.push('J','Q','K','A');
-
                 S.deck = allCardCodes.filter(c => sF.includes(c[1]) && rF.includes(c[0]));
             }
             for (let i = S.deck.length - 1; i > 0; i--) {
@@ -439,19 +516,27 @@
         }
 
         function resetToStart() {
-            if (S.auto) toggleAuto();
+            if (S.auto) window.toggleAuto();
+            stopAudio();
             S.started = false; S.sessionSeq = []; S.histView = []; S.timeStart = null; S.timeEnd = null;
             UI.history.innerHTML = ''; 
             UI.container.innerHTML = '<div class="num-item start-text fade-in">СТАРТ</div>';
+            UI.btnReplay.style.display = 'none';
             updateStatus(); checkVerifyVisibility();
         }
 
-        function generate() {
+        window.generate = function() {
             if (!S.started) { 
-                S.started = true; 
-                S.timeStart = Date.now();
-                if (S.unique) buildDeck(); 
+                S.started = true; S.timeStart = Date.now();
+                if (S.unique && S.mode !== 'phones') buildDeck(); 
                 checkVerifyVisibility(); 
+                UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) ? 'flex' : 'none';
+            }
+
+            if (S.mode === 'phones') {
+                let phone = generatePhone();
+                drawPhone(phone);
+                return;
             }
 
             let chunkItems = [];
@@ -475,8 +560,26 @@
             drawItems(chunkItems);
         }
 
+        function drawPhone(phone) {
+            UI.container.innerHTML = '';
+            let histObj = { raw: phone.formatted, text: phone.formatted, isPhone: true, customText: '' };
+            
+            let div = document.createElement('div');
+            div.className = `num-item phone fade-in`;
+            div.textContent = phone.formatted;
+            UI.container.appendChild(div);
+
+            S.sessionSeq.push(histObj);
+            S.histView.unshift(histObj);
+            updateHistoryStrip();
+            vibrate('short');
+            playAudioSequence(phone.audioChunks);
+            updateStatus();
+        }
+
         function drawItems(items) {
             UI.container.innerHTML = '';
+            let row = document.createElement('div'); row.className = 'chunks-row';
             let speakArr = [];
 
             items.forEach(item => {
@@ -490,110 +593,126 @@
 
                     let div = document.createElement('div');
                     div.className = `num-item fade-in ${S.prefs.chunkSize > 1 || txt.length > 2 ? 'small' : ''}`;
-                    div.textContent = txt;
-                    UI.container.appendChild(div);
+                    div.textContent = txt; row.appendChild(div);
                 } else {
                     histObj.text = `${VALS[item[0]]}${SUITS[item[1]]}`;
                     histObj.isRed = ['H','D'].includes(item[1]);
-                    // Для карт ключ в мапе может быть "AS", "0C" (10 треф)
                     let mapKey = item[0] === '0' ? '10'+item[1] : item;
-                    histObj.customText = S.customMap[mapKey] || S.customMap[item[0]] || ''; // Поиск точной карты или просто ранга
-                    
+                    histObj.customText = S.customMap[mapKey] || S.customMap[item[0]] || ''; 
                     speakArr.push({text: item, isCard: true});
 
                     let img = document.createElement('img');
                     img.className = 'card-item fade-in';
                     img.src = `https://deckofcardsapi.com/static/img/${item}.png`;
                     if(S.prefs.chunkSize === 3) img.style.maxWidth = '25vw';
-                    UI.container.appendChild(img);
+                    row.appendChild(img);
                 }
                 S.sessionSeq.push(histObj);
                 S.histView.unshift(histObj);
             });
 
-            if (S.histView.length > 7) S.histView.pop();
-            UI.history.innerHTML = '';
-            S.histView.forEach((h, i) => {
-                let el = document.createElement('div');
-                el.className = 'hist-item' + (h.isRed ? ' red' : '');
-                el.textContent = h.text;
-                if(i>0) { el.style.transform = `scale(${1 - i*0.1})`; el.style.opacity = 0.6 - i*0.1; }
-                UI.history.appendChild(el);
-            });
-
+            UI.container.appendChild(row);
+            updateHistoryStrip();
             vibrate('short');
-            speak(speakArr);
+            playAudioSequence(speakArr);
             updateStatus();
         }
 
+        function updateHistoryStrip() {
+            if (S.histView.length > (S.mode === 'phones' ? 4 : 7)) S.histView.pop();
+            UI.history.innerHTML = '';
+            S.histView.forEach((h, i) => {
+                let el = document.createElement('div');
+                el.className = 'hist-item' + (h.isRed ? ' red' : '') + (h.isPhone ? ' phone' : '');
+                el.textContent = h.text;
+                if(i>0) { el.style.transform = `scale(${1 - i*0.1})`; el.style.opacity = 0.5 - i*0.1; }
+                UI.history.appendChild(el);
+            });
+        }
+
         function finishSequence() {
-            if(S.auto) toggleAuto();
+            if(S.auto) window.toggleAuto();
             S.timeEnd = Date.now();
             UI.container.innerHTML = '<div class="num-item start-text fade-in">ВСЁ</div>';
-            vibrate('long'); speak([{text: "ВСЁ"}]); 
+            UI.btnReplay.style.display = 'none';
+            vibrate('long'); playAudioSequence([{text: "ВСЁ"}]); 
             updateStatus(); checkVerifyVisibility(true);
         }
 
         // --- Управление ---
-        function toggleMenu() {
+        window.toggleMenu = function() {
             UI.topBar.classList.toggle('visible');
             if(UI.topBar.classList.contains('visible')) {
                 setTimeout(() => { if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') UI.topBar.classList.remove('visible'); }, 5000);
             }
         }
 
-        function toggleMode() {
-            S.mode = S.mode === 'numbers' ? 'cards' : 'numbers';
-            UI.icons.mode.textContent = S.mode === 'cards' ? '🃏' : '🔢';
-            UI.icons.mode.classList.toggle('active', S.mode === 'cards');
-            document.getElementById('setNumbers').style.display = S.mode === 'numbers' ? 'block' : 'none';
-            document.getElementById('setCards').style.display = S.mode === 'cards' ? 'block' : 'none';
+        window.toggleMode = function() {
+            if (S.mode === 'numbers') S.mode = 'cards';
+            else if (S.mode === 'cards') S.mode = 'phones';
+            else S.mode = 'numbers';
+
+            UI.icons.mode.textContent = S.mode === 'cards' ? '🃏' : (S.mode === 'phones' ? '📱' : '🔢');
+            UI.icons.mode.classList.toggle('active', S.mode !== 'numbers');
             
-            if (S.mode === 'cards' && !S.unique) toggleUnique();
+            UI.blocks.num.style.display = S.mode === 'numbers' ? 'block' : 'none';
+            UI.blocks.card.style.display = S.mode === 'cards' ? 'block' : 'none';
+            UI.blocks.phone.style.display = S.mode === 'phones' ? 'block' : 'none';
+            UI.blocks.customImg.style.display = S.mode === 'phones' ? 'none' : 'block';
+            UI.blocks.chunkRow.style.display = S.mode === 'phones' ? 'none' : 'flex';
+            
+            // Телефоны всегда бесконечные
+            UI.btnUnique.style.opacity = S.mode === 'phones' ? '0.3' : '1';
+            UI.btnUnique.style.pointerEvents = S.mode === 'phones' ? 'none' : 'auto';
+            if (S.mode === 'phones' && S.unique) window.toggleUnique();
+            
+            // Если карты, автоматически ставим уникальный режим (колода)
+            if (S.mode === 'cards' && !S.unique) window.toggleUnique();
+
             resetToStart();
         }
 
-        function toggleUnique() {
+        window.toggleUnique = function() {
+            if(S.mode === 'phones') return;
             S.unique = !S.unique;
             UI.icons.unq.textContent = S.unique ? '🔀' : '♾️';
             UI.icons.unq.classList.toggle('active', S.unique);
             resetToStart();
         }
 
-        function toggleSound() {
+        window.toggleSound = function() {
             S.sound = !S.sound;
             UI.icons.snd.textContent = S.sound ? '🔊' : '🔇';
             UI.icons.snd.classList.toggle('active', S.sound);
             if(S.sound && S.voices.length === 0 && 'speechSynthesis' in window) window.speechSynthesis.getVoices();
         }
 
-        function toggleAuto() {
+        window.toggleAuto = function() {
             if (S.auto) {
                 clearInterval(S.auto); S.auto = null;
                 UI.icons.auto.textContent = "▶️"; UI.icons.auto.classList.remove('active');
             } else {
-                if (!S.started && S.unique && S.deck.length===0) buildDeck();
-                generate();
+                if (!S.started && S.unique && S.deck.length===0 && S.mode !== 'phones') buildDeck();
+                window.generate();
                 const ms = parseFloat(document.getElementById('inpTimer').value) * 1000;
-                S.auto = setInterval(generate, ms);
+                S.auto = setInterval(window.generate, ms);
                 UI.icons.auto.textContent = "⏸️"; UI.icons.auto.classList.add('active');
             }
             updateStatus();
         }
 
-        function handleStageClick() {
+        window.handleStageClick = function() {
             if (UI.topBar.classList.contains('visible')) { UI.topBar.classList.remove('visible'); return; }
-            if (S.auto) toggleAuto(); else generate();
+            if (S.auto) window.toggleAuto(); else window.generate();
         }
 
-        function openSettings() { UI.modals.set.classList.add('open'); if(S.auto) toggleAuto(); }
-        function closeSettings() { UI.modals.set.classList.remove('open'); readPreferences(); resetToStart(); }
+        window.openSettings = function() { UI.modals.set.classList.add('open'); if(S.auto) window.toggleAuto(); }
+        window.closeSettings = function() { UI.modals.set.classList.remove('open'); readPreferences(); resetToStart(); }
 
         // --- Модалка Проверки ---
-        function openRecall() {
-            if(S.auto) toggleAuto();
+        window.openRecall = function() {
+            if(S.auto) window.toggleAuto();
             
-            // Таймер
             let timeText = "";
             if(S.prefs.timer && S.timeStart) {
                 let end = S.timeEnd || Date.now();
@@ -604,6 +723,8 @@
             document.getElementById('recallTimerBox').textContent = timeText;
 
             const grid = document.getElementById('recallGrid'); grid.innerHTML = '';
+            if (S.mode === 'phones') grid.classList.add('phones'); else grid.classList.remove('phones');
+
             S.sessionSeq.forEach(item => {
                 let wrap = document.createElement('div'); wrap.className = 'recall-cell-wrapper';
                 
@@ -617,36 +738,36 @@
                     let lbl = document.createElement('div'); lbl.className = 'custom-image-label';
                     lbl.textContent = item.customText; wrap.appendChild(lbl);
                 }
-
                 grid.appendChild(wrap);
             });
             UI.modals.rec.classList.add('open');
         }
 
-        function closeRecall() { UI.modals.rec.classList.remove('open'); }
-        function revealAll() {
+        window.closeRecall = function() { UI.modals.rec.classList.remove('open'); }
+        window.revealAll = function() {
             document.querySelectorAll('.recall-cell').forEach(c => {
                 c.classList.add('revealed'); if (c.dataset.red) c.classList.add('red');
             });
         }
 
-        function exportData() {
-            let str = `## Тренировка (${S.mode === 'numbers' ? 'Числа' : 'Карты'})\n`;
+        window.exportData = function() {
+            let typeName = S.mode === 'numbers' ? 'Числа' : (S.mode === 'cards' ? 'Карты' : 'Телефоны');
+            let str = `## Тренировка (${typeName})\n`;
             if(S.prefs.timer && S.timeStart) {
                 let sec = Math.floor(((S.timeEnd || Date.now()) - S.timeStart) / 1000);
                 str += `⏱ Время: ${sec} сек.\n`;
             }
             str += `\n**Последовательность (${S.sessionSeq.length}):**\n`;
-            str += S.sessionSeq.map(i => i.customText ? `${i.text}(${i.customText})` : i.text).join(' - ');
+            str += S.sessionSeq.map(i => i.customText ? `${i.text}(${i.customText})` : i.text).join(S.mode === 'phones' ? '\n' : ' - ');
             try { navigator.clipboard.writeText(str).then(() => alert("Скопировано!")); } catch(e) {}
         }
 
         document.addEventListener('keydown', (e) => {
-            if(e.code === 'Space') { e.preventDefault(); handleStageClick(); }
-            if(e.code === 'KeyA') toggleAuto();
+            if(e.code === 'Space') { e.preventDefault(); window.handleStageClick(); }
+            if(e.code === 'KeyA') window.toggleAuto();
         });
 
-        readPreferences(); // Init
+        readPreferences(); 
     </script>
 </body>
 </html>
