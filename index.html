@@ -375,19 +375,23 @@
 
         // Умная озвучка с поддержкой пауз между чанками номера телефона
         function stopAudio() {
-            window.speechSynthesis.cancel();
+            // Добавили безопасную проверку
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
             S.audioTimeouts.forEach(t => clearTimeout(t));
             S.audioTimeouts = [];
         }
 
         function playAudioSequence(chunks) {
-            if (!S.sound || !('speechSynthesis' in window)) return;
+            // Убрали проверку !('speechSynthesis' in window)
+            if (!S.sound) return; 
             stopAudio();
             
             let rate = S.mode === 'phones' ? parseFloat(document.getElementById('inpPhoneRate').value) || 1.0 : 1.0;
             let pauseMs = S.mode === 'phones' ? (parseFloat(document.getElementById('inpPhonePause').value) || 0) * 1000 : 0;
             
-            S.currentAudioChunks = chunks; // Сохраняем для реплея
+            S.currentAudioChunks = chunks; 
 
             const playNext = (index) => {
                 if(index >= chunks.length) return;
@@ -408,6 +412,7 @@
                     else if (item.text.length === 3 && item.text.startsWith('00')) phrase = "Ноль ноль " + parseInt(item.text);
                     else if (item.text.length === 3 && item.text.startsWith('0')) phrase = "Ноль " + parseInt(item.text);
                 }
+
                 if (window.AndroidApp) {
                     window.AndroidApp.speak(phrase);
                     if(index + 1 < chunks.length) {
@@ -415,18 +420,21 @@
                         S.audioTimeouts.push(t);
                     }
                 } else {
-                    let ut = new SpeechSynthesisUtterance(phrase);
-                    ut.lang = 'ru-RU'; ut.rate = rate;
-                    let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
-                    if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
-                    
-                    ut.onend = () => {
-                        if(index + 1 < chunks.length) {
-                            let t = setTimeout(() => playNext(index + 1), pauseMs);
-                            S.audioTimeouts.push(t);
-                        }
-                    };
-                    window.speechSynthesis.speak(ut);
+                    // Страховка для браузера
+                    if ('speechSynthesis' in window) {
+                        let ut = new SpeechSynthesisUtterance(phrase);
+                        ut.lang = 'ru-RU'; ut.rate = rate;
+                        let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
+                        if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
+                        
+                        ut.onend = () => {
+                            if(index + 1 < chunks.length) {
+                                let t = setTimeout(() => playNext(index + 1), pauseMs);
+                                S.audioTimeouts.push(t);
+                            }
+                        };
+                        window.speechSynthesis.speak(ut);
+                    }
                 }
             };
 
