@@ -408,19 +408,26 @@
                     else if (item.text.length === 3 && item.text.startsWith('00')) phrase = "Ноль ноль " + parseInt(item.text);
                     else if (item.text.length === 3 && item.text.startsWith('0')) phrase = "Ноль " + parseInt(item.text);
                 }
-
-                let ut = new SpeechSynthesisUtterance(phrase);
-                ut.lang = 'ru-RU'; ut.rate = rate;
-                let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
-                if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
-                
-                ut.onend = () => {
+                if (window.AndroidApp) {
+                    window.AndroidApp.speak(phrase);
                     if(index + 1 < chunks.length) {
-                        let t = setTimeout(() => playNext(index + 1), pauseMs);
+                        let t = setTimeout(() => playNext(index + 1), pauseMs + 1000); 
                         S.audioTimeouts.push(t);
                     }
-                };
-                window.speechSynthesis.speak(ut);
+                } else {
+                    let ut = new SpeechSynthesisUtterance(phrase);
+                    ut.lang = 'ru-RU'; ut.rate = rate;
+                    let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
+                    if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
+                    
+                    ut.onend = () => {
+                        if(index + 1 < chunks.length) {
+                            let t = setTimeout(() => playNext(index + 1), pauseMs);
+                            S.audioTimeouts.push(t);
+                        }
+                    };
+                    window.speechSynthesis.speak(ut);
+                }
             };
 
             playNext(0);
