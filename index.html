@@ -3,361 +3,655 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" content="#0a0a0f">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Mnemonic Zen 8.0</title>
-    
+    <title>Mnemonic Zen 9.0</title>
     <link rel="apple-touch-icon" href="https://img.icons8.com/nolan/180/brain.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/nolan/64/brain.png">
-
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
+
         :root {
-            --bg: #121212; --surface: #1e1e1e; --surface-light: #2c2c2e;
-            --primary: #bb86fc; --text: #e0e0e0; --text-dim: #8e8e93;
-            --accent: #03dac6; --red-suit: #ff4a4a;
+            --bg: #0a0a0f;
+            --surface: #13131f;
+            --surface2: #1c1c2e;
+            --surface3: #252540;
+            --border: rgba(255,255,255,0.08);
+            --primary: #a78bfa;
+            --primary-glow: rgba(167,139,250,0.25);
+            --accent: #34d399;
+            --accent2: #f472b6;
+            --accent3: #60a5fa;
+            --warn: #fb923c;
+            --red: #f87171;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --text3: #475569;
+            --mono: 'Space Mono', monospace;
+            --sans: 'Inter', sans-serif;
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: 'SF Mono', 'Roboto Mono', monospace;
-            background: var(--bg); color: var(--text); margin: 0;
-            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            user-select: none; -webkit-tap-highlight-color: transparent;
-            transition: background 0.3s;
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body.phantom-mode { background: #000; }
-        body.phantom-mode .main-stage, body.phantom-mode .history-strip, body.phantom-mode .status-pill { opacity: 0 !important; pointer-events: none; }
+        body.theme-ocean { --primary: #38bdf8; --primary-glow: rgba(56,189,248,0.2); --accent: #34d399; }
+        body.theme-rose  { --primary: #f472b6; --primary-glow: rgba(244,114,182,0.2); --accent: #fb923c; }
+        body.theme-gold  { --primary: #fbbf24; --primary-glow: rgba(251,191,36,0.2); --accent: #34d399; }
 
-        body.flash-correct { background: #1b5e20 !important; transition: background 0.1s; }
-        body.flash-wrong { background: #b71c1c !important; transition: background 0.1s; }
-        body.flash-correct .main-stage, body.flash-wrong .main-stage { transition: none; }
+        body.flash-correct { background: #052e16 !important; transition: background 0.08s; }
+        body.flash-wrong   { background: #450a0a !important; transition: background 0.08s; }
+        body.phantom-mode .main-stage,
+        body.phantom-mode .history-strip,
+        body.phantom-mode .status-pill { opacity: 0 !important; pointer-events: none; }
 
-        .trigger-zone { position: absolute; top: 0; width: 100%; height: 70px; z-index: 90; }
-        
+        /* ── TOP TRIGGER & BAR ── */
+        .trigger-zone {
+            position: absolute; top: 0; width: 100%; height: 64px; z-index: 90;
+        }
+
         .top-bar {
             position: absolute; top: 0; width: 100%;
-            display: flex; justify-content: center; gap: 12px;
-            background: rgba(30, 30, 30, 0.95); padding: 15px 5px;
-            backdrop-filter: blur(10px); transform: translateY(-100%);
-            transition: transform 0.3s ease; z-index: 100; box-sizing: border-box;
-            border-bottom: 1px solid #333;
+            display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+            background: rgba(13,13,25,0.97);
+            padding: 14px 8px 12px;
+            backdrop-filter: blur(20px);
+            transform: translateY(-100%);
+            transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
         }
         .top-bar.visible { transform: translateY(0); }
 
         .icon-btn {
             display: flex; flex-direction: column; align-items: center;
-            font-size: 0.65rem; color: var(--text-dim); cursor: pointer; width: 50px;
+            font-size: 0.6rem; color: var(--text3); cursor: pointer;
+            width: 52px; gap: 3px; padding: 6px 0;
+            border-radius: 12px; transition: background 0.2s;
         }
-        .icon-btn .icon { font-size: 1.6rem; margin-top: 5px; opacity: 0.6; transition: 0.2s; }
-        .icon-btn .icon.active { opacity: 1; transform: scale(1.1); color: var(--accent); }
-        #iconMode.active { color: #ffb86c; } 
-        #iconUnique.active { color: var(--primary); }
+        .icon-btn:active { background: var(--surface3); }
+        .icon-btn .icon { font-size: 1.5rem; opacity: 0.55; transition: 0.2s; }
+        .icon-btn .icon.active { opacity: 1; transform: scale(1.15); color: var(--primary); }
+        .icon-btn .lbl { font-size: 0.58rem; color: var(--text3); letter-spacing: 0.5px; }
 
+        /* ── STATUS PILL ── */
         .status-pill {
-            position: absolute; top: 15px; left: 15px;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--accent); padding: 5px 12px; border-radius: 20px;
-            font-size: 0.75rem; font-weight: bold; backdrop-filter: blur(5px);
-            opacity: 0; transition: opacity 0.3s; z-index: 80; pointer-events: none;
+            position: absolute; top: 14px; left: 14px;
+            background: rgba(167,139,250,0.1);
+            border: 1px solid rgba(167,139,250,0.2);
+            color: var(--primary); padding: 5px 12px;
+            border-radius: 20px; font-size: 0.7rem; font-weight: 600;
+            font-family: var(--mono);
+            backdrop-filter: blur(5px); opacity: 0;
+            transition: opacity 0.3s; z-index: 80; pointer-events: none;
             letter-spacing: 1px;
         }
         .status-pill.visible { opacity: 1; }
 
+        /* ── PROGRESS BAR ── */
+        .progress-bar-wrap {
+            position: absolute; top: 0; left: 0; width: 100%; height: 3px; z-index: 200;
+            pointer-events: none;
+        }
+        .progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.4s ease; border-radius: 0 3px 3px 0;
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        /* ── MAIN STAGE ── */
         .main-stage {
-            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            position: relative; z-index: 10; cursor: pointer; padding: 20px;
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            position: relative; z-index: 10; cursor: pointer;
+            padding: 20px; gap: 0;
         }
-        .main-stage:active { transform: scale(0.98); }
-
+        .main-stage:active .items-container { transform: scale(0.97); }
         .items-container {
-            display: flex; flex-direction: column; gap: 15px; justify-content: center; align-items: center;
+            display: flex; flex-direction: column; gap: 12px;
+            justify-content: center; align-items: center;
             text-align: center; width: 100%;
+            transition: transform 0.1s;
         }
+        .chunks-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
-        .chunks-row { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-
+        /* Number display */
         .num-item {
-            font-size: 8rem; font-weight: 700; color: var(--primary);
-            line-height: 1; letter-spacing: -3px; text-shadow: 0 0 40px rgba(187, 134, 252, 0.2);
+            font-family: var(--mono);
+            font-size: 8rem; font-weight: 700;
+            color: var(--primary);
+            line-height: 1; letter-spacing: -4px;
+            text-shadow: 0 0 60px var(--primary-glow);
         }
-        .num-item.small { font-size: 5rem; letter-spacing: -1px; }
-        .num-item.phone { font-size: 10vw; letter-spacing: 0px; color: var(--accent); }
-        .num-item.date-word { font-size: 4rem; letter-spacing: 2px; color: var(--accent); }
-        
-        .start-text { font-size: 3rem !important; letter-spacing: 2px !important; color: var(--text-dim) !important; width: 100%; }
-        
-        .card-item { max-height: 45vh; max-width: 28vw; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); object-fit: contain; }
+        .num-item.small  { font-size: 5rem; letter-spacing: -1px; }
+        .num-item.phone  { font-family: var(--mono); font-size: 10vw; letter-spacing: 1px; color: var(--accent3); }
+        .num-item.date-word { font-family: var(--sans); font-size: 2.8rem; font-weight: 700; letter-spacing: 1px; color: var(--accent); line-height: 1.2; }
+        .num-item.start-text { font-size: 2.5rem !important; letter-spacing: 4px !important; color: var(--text3) !important; }
+        .card-item { max-height: 42vh; max-width: 26vw; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); object-fit: contain; }
 
-        .fade-in { animation: fadeIn 0.15s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* PI mode */
+        .pi-display {
+            font-family: var(--mono); font-size: 5rem; font-weight: 700;
+            color: var(--primary); letter-spacing: -2px;
+            text-shadow: 0 0 60px var(--primary-glow);
+        }
+        .pi-display .pi-char {
+            display: inline-block;
+            transition: color 0.3s, transform 0.3s;
+        }
+        .pi-display .pi-char.highlight {
+            color: var(--accent); transform: scale(1.2);
+        }
+        .pi-position {
+            font-family: var(--mono); font-size: 0.75rem; color: var(--text3);
+            letter-spacing: 2px; margin-top: 8px;
+        }
+
+        .fade-in { animation: fadeIn 0.18s cubic-bezier(.4,0,.2,1); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
         .streak-effect {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 6rem; z-index: 200; pointer-events: none;
-            animation: streakPop 1s ease-out forwards;
+            position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%);
+            font-size: 5rem; z-index: 300; pointer-events: none;
+            animation: streakPop 0.9s ease-out forwards;
+        }
+        .streak-label {
+            position: fixed; top: 55%; left: 50%; transform: translate(-50%,-50%);
+            font-family: var(--mono); font-size: 1.2rem; font-weight: 700;
+            color: var(--accent); z-index: 300; pointer-events: none;
+            animation: streakPop 0.9s ease-out forwards;
         }
         @keyframes streakPop {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
-            100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+            0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.4); }
+            35%  { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%,-80%) scale(0.9); }
         }
 
+        .achievement-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--surface2), var(--surface3));
+            border: 1px solid var(--primary);
+            color: var(--text); padding: 10px 20px; border-radius: 16px;
+            font-size: 0.85rem; font-weight: 600; z-index: 400;
+            animation: toastIn 2.5s ease-out forwards;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        @keyframes toastIn {
+            0%   { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+            80%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* ── REPLAY BTN ── */
         .replay-btn {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            color: white; font-size: 1rem; padding: 10px 20px; border-radius: 20px;
-            margin-top: 20px; cursor: pointer; display: none; backdrop-filter: blur(5px);
-            display: flex; align-items: center; gap: 8px; font-family: inherit;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text2); font-size: 0.85rem; padding: 10px 20px; border-radius: 24px;
+            margin-top: 24px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            font-family: var(--sans); transition: 0.2s;
         }
-        .replay-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
+        .replay-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
 
+        /* ── HISTORY STRIP ── */
         .history-strip {
-            position: absolute; bottom: 85px; width: 100%; height: 60px;
-            display: flex; justify-content: center; align-items: center; gap: 15px;
-            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-            pointer-events: none; transition: opacity 0.3s ease;
+            position: absolute; bottom: 78px; width: 100%; height: 55px;
+            display: flex; justify-content: center; align-items: center; gap: 14px;
+            mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+            pointer-events: none; transition: opacity 0.3s;
         }
-        .hist-item { font-size: 1.3rem; color: var(--text-dim); opacity: 0.5; font-weight: 500;}
-        .hist-item.red { color: var(--red-suit); }
-        .hist-item.phone { font-size: 1rem; letter-spacing: 1px; }
-        .hist-item:first-child { font-size: 1.8rem; opacity: 1; color: var(--text); font-weight: bold; }
-        .hist-item.phone:first-child { font-size: 1.3rem; }
+        .hist-item {
+            font-family: var(--mono); font-size: 1.2rem; color: var(--text3);
+            opacity: 0.4; font-weight: 700;
+        }
+        .hist-item.red { color: var(--red); }
+        .hist-item.phone { font-size: 0.85rem; letter-spacing: 1px; }
+        .hist-item:first-child { font-size: 1.6rem; opacity: 1; color: var(--text); }
+        .hist-item.phone:first-child { font-size: 1.1rem; }
+        .hist-item.answered { color: var(--accent); }
 
+        /* ── VERIFY BTN ── */
         .verify-btn {
-            position: absolute; bottom: 25px;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
-            color: var(--text); padding: 12px 25px; border-radius: 30px;
-            font-size: 0.9rem; font-family: inherit; font-weight: bold;
-            cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(15px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 20; display: flex; align-items: center; gap: 8px;
+            position: absolute; bottom: 22px;
+            background: rgba(167,139,250,0.08);
+            border: 1px solid rgba(167,139,250,0.25);
+            color: var(--text); padding: 12px 28px; border-radius: 32px;
+            font-size: 0.85rem; font-family: var(--sans); font-weight: 600;
+            cursor: pointer; opacity: 0; pointer-events: none;
+            transform: translateY(12px);
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 20;
+            display: flex; align-items: center; gap: 8px;
         }
         .verify-btn.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-        .verify-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
+        .verify-btn:active { transform: scale(0.95); }
 
+        /* ── DAY BUTTONS ── */
+        .day-section { display: flex; flex-direction: column; align-items: center; margin-top: 20px; width: 100%; }
+        .day-prompt { color: var(--text2); font-size: 0.85rem; margin-bottom: 12px; letter-spacing: 1px; }
+        .day-buttons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; width: 100%; }
+        .day-btn {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); padding: 11px 14px; border-radius: 14px;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer;
+            min-width: 48px; transition: 0.15s; font-family: var(--mono);
+        }
+        .day-btn:active { transform: scale(0.88); }
+        .day-btn.correct { background: #14532d; border-color: #22c55e; color: #86efac; }
+        .day-btn.wrong   { background: #450a0a; border-color: #ef4444; color: #fca5a5; }
+        .day-btn.disabled { opacity: 0.35; pointer-events: none; }
+
+        .date-controls { display: flex; gap: 10px; margin-top: 14px; justify-content: center; }
+        .date-controls button {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text2); padding: 8px 18px; border-radius: 24px;
+            font-size: 0.8rem; font-family: var(--sans); cursor: pointer; transition: 0.2s;
+        }
+        .date-controls button:active { transform: scale(0.93); }
+
+        /* ── MODAL ── */
         .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); z-index: 1000; display: none; 
-            flex-direction: column; align-items: center; padding-top: 30px; overflow-y: auto; padding-bottom: 30px;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            z-index: 1000; display: none;
+            flex-direction: column; align-items: center;
+            padding: 20px 0 30px; overflow-y: auto;
         }
-        .modal.open { display: flex; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
-
+        .modal.open { display: flex; animation: slideUp 0.25s ease; }
+        @keyframes slideUp {
+            from { transform: translateY(16px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
         .modal-content {
-            background: var(--surface); width: 92%; max-width: 450px;
-            border-radius: 20px; padding: 20px; box-sizing: border-box;
+            background: var(--surface);
+            width: 94%; max-width: 460px;
+            border-radius: 24px; padding: 22px;
+            border: 1px solid var(--border);
         }
-        .modal-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; text-align: center; color: var(--primary); }
-        
-        .setting-group { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .setting-group h3 { margin: 0 0 10px 0; font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;}
-        .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px;}
-        
+        .modal-title {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 18px;
+            text-align: center; color: var(--primary);
+            font-family: var(--mono); letter-spacing: 2px;
+        }
+        .modal-tabs {
+            display: flex; gap: 6px; margin-bottom: 18px; background: var(--surface2);
+            padding: 4px; border-radius: 14px;
+        }
+        .modal-tab {
+            flex: 1; padding: 8px; border-radius: 10px; border: none;
+            background: transparent; color: var(--text2); font-family: var(--sans);
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .modal-tab.active {
+            background: var(--surface3); color: var(--primary);
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .setting-group { margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .setting-group:last-child { border-bottom: none; margin-bottom: 0; }
+        .setting-group h3 {
+            margin: 0 0 10px; font-size: 0.7rem; color: var(--text3);
+            text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--sans);
+        }
+        .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+
         input[type="number"], select {
-            background: var(--surface-light); border: 1px solid #444; color: white;
-            padding: 8px; border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); padding: 8px 10px; border-radius: 10px;
+            font-family: var(--mono); font-size: 0.85rem; outline: none;
+            transition: border-color 0.2s;
         }
-        
+        input[type="number"]:focus, select:focus { border-color: var(--primary); }
+
         .checkbox-label {
-            display: flex; align-items: center; gap: 5px; background: var(--surface-light);
-            padding: 8px 10px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; flex: 1; justify-content: center;
+            display: flex; align-items: center; gap: 8px;
+            background: var(--surface2); padding: 9px 12px;
+            border-radius: 10px; font-size: 0.82rem; cursor: pointer;
+            flex: 1; justify-content: center; transition: background 0.2s;
         }
+        .checkbox-label:active { background: var(--surface3); }
         .checkbox-label.block { justify-content: space-between; flex: 100%; }
-        input[type="checkbox"] { accent-color: var(--primary); transform: scale(1.1); }
-        
+        input[type="checkbox"] { accent-color: var(--primary); transform: scale(1.2); }
+
         textarea {
-            width: 100%; height: 80px; background: var(--surface-light); border: 1px solid #444;
-            color: white; border-radius: 8px; padding: 8px; box-sizing: border-box; font-family: inherit;
-            font-size: 0.8rem; resize: none; outline: none;
+            width: 100%; height: 80px; background: var(--surface2);
+            border: 1px solid var(--border); color: var(--text);
+            border-radius: 10px; padding: 10px; font-family: var(--mono);
+            font-size: 0.78rem; resize: none; outline: none; transition: border-color 0.2s;
         }
+        textarea:focus { border-color: var(--primary); }
 
-        .btn-close {
-            background: var(--primary); color: #000; border: none; padding: 12px;
-            width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; font-family: inherit;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: #fff; border: none; padding: 13px;
+            width: 100%; border-radius: 14px; font-weight: 700;
+            font-size: 0.95rem; cursor: pointer; margin-top: 12px;
+            font-family: var(--sans); transition: 0.2s;
+            box-shadow: 0 4px 20px rgba(167,139,250,0.3);
         }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary {
+            background: var(--surface2); color: var(--text2); border: 1px solid var(--border);
+            padding: 11px; border-radius: 14px; font-weight: 600;
+            font-size: 0.88rem; cursor: pointer; font-family: var(--sans); transition: 0.2s;
+        }
+        .btn-secondary:active { background: var(--surface3); }
 
-        .recall-timer { text-align: center; color: var(--accent); font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
+        /* ── RECALL MODAL ── */
+        .recall-timer { text-align: center; color: var(--accent); font-family: var(--mono); font-size: 1rem; font-weight: 700; margin-bottom: 14px; }
+        .recall-stats { display: flex; gap: 12px; justify-content: center; margin-bottom: 14px; }
+        .recall-stat { background: var(--surface2); border-radius: 12px; padding: 8px 16px; text-align: center; }
+        .recall-stat .val { font-family: var(--mono); font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+        .recall-stat .key { font-size: 0.65rem; color: var(--text3); letter-spacing: 1px; margin-top: 2px; }
+
         .recall-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-            gap: 10px; width: 100%; max-height: 50vh; overflow-y: auto; padding-right: 5px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+            gap: 8px; width: 100%; max-height: 45vh; overflow-y: auto; padding-right: 4px;
         }
         .recall-grid.phones { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-        
-        .recall-cell-wrapper { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .recall-cell-wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .recall-cell {
-            background: var(--surface-light); border: 1px solid #444; border-radius: 8px;
+            background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
             width: 100%; aspect-ratio: 1; display: flex; justify-content: center; align-items: center;
-            font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.2s;
-            color: transparent; position: relative; text-align: center;
+            font-family: var(--mono); font-size: 1.1rem; font-weight: 700; cursor: pointer;
+            color: transparent; position: relative; text-align: center; transition: 0.2s;
         }
-        .recall-grid.phones .recall-cell { aspect-ratio: auto; padding: 15px 5px; font-size: 0.9rem; letter-spacing: 0.5px;}
-
-        .recall-cell::after { content: "?"; position: absolute; color: var(--text-dim); font-size: 1.5rem; }
-        .recall-cell.revealed { background: #fff; color: #000; border-color: #fff; }
+        .recall-grid.phones .recall-cell { aspect-ratio: auto; padding: 14px 5px; font-size: 0.85rem; }
+        .recall-cell::after { content: "?"; position: absolute; color: var(--text3); font-size: 1.3rem; }
+        .recall-cell.revealed { background: #e2e8f0; color: #0f172a; border-color: #e2e8f0; }
         .recall-cell.revealed::after { display: none; }
-        .recall-cell.revealed.red { color: var(--red-suit); }
-        
-        .custom-image-label { font-size: 0.65rem; color: var(--accent); text-align: center; word-break: break-word; line-height: 1; min-height: 10px;}
+        .recall-cell.revealed.red { color: #dc2626; }
+        .custom-image-label { font-size: 0.6rem; color: var(--accent); text-align: center; line-height: 1.2; min-height: 10px; }
+        .action-row { display: flex; gap: 10px; margin-top: 16px; }
+        .action-btn { flex: 1; padding: 11px; border-radius: 12px; border: none; background: var(--surface2); color: var(--text); font-family: var(--sans); cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.2s; }
+        .action-btn:active { background: var(--surface3); }
+        .recall-day-select { width: 100%; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 4px; font-family: var(--sans); font-size: 0.75rem; }
 
-        .action-row { display: flex; gap: 10px; margin-top: 20px; }
-        .action-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #333; color: white; font-family: inherit; cursor: pointer; font-weight: bold;}
+        /* ── STATS MODAL ── */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .stat-card { background: var(--surface2); border-radius: 14px; padding: 14px; text-align: center; border: 1px solid var(--border); }
+        .stat-card .sv { font-family: var(--mono); font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+        .stat-card .sk { font-size: 0.65rem; color: var(--text3); letter-spacing: 1px; margin-top: 4px; text-transform: uppercase; }
+        .stat-card.accent .sv { color: var(--accent); }
+        .stat-card.warn .sv { color: var(--warn); }
+        .stat-card.pink .sv { color: var(--accent2); }
 
-        .day-buttons {
-            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
-            margin-top: 20px; width: 100%;
+        .achievements-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .achievement-item {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--surface2); border-radius: 12px; padding: 10px 14px;
+            border: 1px solid var(--border); opacity: 0.35; transition: 0.2s;
         }
-        .day-btn {
-            background: var(--surface-light); border: 1px solid #444;
-            color: var(--text); padding: 12px 16px; border-radius: 12px;
-            font-size: 1.1rem; font-weight: bold; cursor: pointer;
-            min-width: 50px; transition: 0.2s; font-family: inherit;
-        }
-        .day-btn:active { transform: scale(0.9); }
-        .day-btn.correct { background: #2e7d32; border-color: #4caf50; }
-        .day-btn.wrong { background: #b71c1c; border-color: #f44336; }
-        .day-btn.disabled { opacity: 0.4; pointer-events: none; }
+        .achievement-item.unlocked { opacity: 1; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.05); }
+        .achievement-item .ach-icon { font-size: 1.6rem; }
+        .achievement-item .ach-name { font-size: 0.85rem; font-weight: 600; }
+        .achievement-item .ach-desc { font-size: 0.7rem; color: var(--text3); margin-top: 2px; }
 
-        .date-controls {
-            display: flex; gap: 12px; margin-top: 15px; justify-content: center;
+        /* ── PI MODE ── */
+        .pi-progress {
+            font-family: var(--mono); font-size: 0.7rem; color: var(--text3);
+            letter-spacing: 1px; margin-top: 6px;
         }
-        .date-controls button {
-            background: var(--surface-light); border: 1px solid #555;
-            color: var(--text); padding: 8px 18px; border-radius: 30px;
-            font-size: 0.9rem; font-family: inherit; cursor: pointer;
-            transition: 0.2s;
+        .pi-input-row {
+            display: flex; gap: 8px; justify-content: center; margin-top: 18px; flex-wrap: wrap;
         }
-        .date-controls button:active { transform: scale(0.9); }
+        .pi-digit-btn {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); width: 48px; height: 52px; border-radius: 12px;
+            font-family: var(--mono); font-size: 1.4rem; font-weight: 700; cursor: pointer;
+            transition: 0.15s;
+        }
+        .pi-digit-btn:active { transform: scale(0.88); background: var(--surface3); }
+        .pi-digit-btn.correct { background: #14532d; border-color: #22c55e; color: #86efac; }
+        .pi-digit-btn.wrong   { background: #450a0a; border-color: #ef4444; color: #fca5a5; animation: shake 0.3s; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20%,60% { transform: translateX(-5px); }
+            40%,80% { transform: translateX(5px); }
+        }
 
-        .recall-day-select {
-            width: 100%; margin-top: 5px;
-            background: var(--surface-light); color: white;
-            border: 1px solid #444; border-radius: 6px;
-            padding: 4px; font-family: inherit;
+        /* ── THEME PICKER ── */
+        .theme-row { display: flex; gap: 8px; }
+        .theme-swatch {
+            width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent;
+            cursor: pointer; transition: 0.2s;
         }
+        .theme-swatch.active { border-color: white; transform: scale(1.15); }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="trigger-zone" onclick="toggleMenu()"></div>
+<div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+<div class="trigger-zone" onclick="toggleMenu()"></div>
 
-    <div class="top-bar" id="topBar">
-        <div class="icon-btn" onclick="toggleMode()"><span>Тип</span><div class="icon" id="iconMode">🔢</div></div>
-        <div class="icon-btn" onclick="toggleUnique()" id="btnUnique"><span>Режим</span><div class="icon" id="iconUnique">♾️</div></div>
-        <div class="icon-btn" onclick="toggleAuto()"><span>Авто</span><div class="icon" id="iconAuto">▶️</div></div>
-        <div class="icon-btn" onclick="toggleSound()"><span>Звук</span><div class="icon" id="iconSound">🔇</div></div>
-        <div class="icon-btn" onclick="openSettings()"><span>Настр.</span><div class="icon">⚙️</div></div>
+<div class="top-bar" id="topBar">
+    <div class="icon-btn" onclick="toggleMode()"><div class="icon" id="iconMode">🔢</div><span class="lbl">ТИП</span></div>
+    <div class="icon-btn" onclick="toggleUnique()" id="btnUnique"><div class="icon" id="iconUnique">♾️</div><span class="lbl">РЕЖИМ</span></div>
+    <div class="icon-btn" onclick="toggleAuto()"><div class="icon" id="iconAuto">▶️</div><span class="lbl">АВТО</span></div>
+    <div class="icon-btn" onclick="toggleSound()"><div class="icon" id="iconSound">🔇</div><span class="lbl">ЗВУК</span></div>
+    <div class="icon-btn" onclick="openSettings()"><div class="icon">⚙️</div><span class="lbl">НАСТР.</span></div>
+    <div class="icon-btn" onclick="openStats()"><div class="icon">📊</div><span class="lbl">СТАТ.</span></div>
+</div>
+
+<div class="status-pill" id="statusPill"></div>
+
+<div class="main-stage" id="stage" onclick="handleStageClick()">
+    <div class="items-container" id="displayContainer">
+        <div class="num-item start-text fade-in">СТАРТ</div>
     </div>
 
-    <div class="status-pill" id="statusPill"></div>
-
-    <div class="main-stage" id="stage" onclick="handleStageClick()">
-        <div class="items-container" id="displayContainer">
-            <div class="num-item start-text fade-in">СТАРТ</div>
-        </div>
-        <div id="dayButtons" style="display:none; margin-top:20px; width:100%;">
-            <div style="color:var(--text-dim); font-size:0.9rem; margin-bottom:10px;">Какой день недели?</div>
+    <!-- Day buttons for dates mode -->
+    <div id="daySection" style="display:none; width:100%;">
+        <div class="day-section">
+            <div class="day-prompt">КАКОЙ ДЕНЬ НЕДЕЛИ?</div>
             <div class="day-buttons" id="dayBtnContainer"></div>
             <div class="date-controls">
-                <button id="btnRepeatDate" onclick="repeatDate()">🔊 Повторить дату</button>
-                <button id="btnSkipDate" onclick="skipDate()">⏭️ Скип</button>
+                <button onclick="repeatDate()" id="btnRepeatDate">🔊 Повторить</button>
+                <button onclick="skipDate()" id="btnSkipDate">⏭ Пропустить</button>
             </div>
         </div>
-        <div class="replay-btn" id="btnReplay" onclick="replayAudio(event)">🔁 Послушать еще раз</div>
     </div>
-    
-    <div class="history-strip" id="history"></div>
-    <button class="verify-btn" id="btnVerify" onclick="openRecall()">👁️ Проверить</button>
 
-    <div class="modal" id="modalSettings">
-        <div class="modal-content">
-            <div class="modal-title">Настройки PRO</div>
-            
+    <!-- PI mode digit input -->
+    <div id="piSection" style="display:none; width:100%;">
+        <div class="pi-input-row" id="piDigitBtns"></div>
+    </div>
+
+    <div class="replay-btn" id="btnReplay" onclick="replayAudio(event)" style="display:none">🔁 Ещё раз</div>
+</div>
+
+<div class="history-strip" id="history"></div>
+<button class="verify-btn" id="btnVerify" onclick="openRecall()">👁 Проверить память</button>
+
+<!-- ══ SETTINGS MODAL ══ -->
+<div class="modal" id="modalSettings">
+    <div class="modal-content">
+        <div class="modal-title">⚙️ НАСТРОЙКИ</div>
+        <div class="modal-tabs">
+            <button class="modal-tab active" onclick="switchTab('tabMode')">Режим</button>
+            <button class="modal-tab" onclick="switchTab('tabTrain')">Тренировка</button>
+            <button class="modal-tab" onclick="switchTab('tabUI')">Интерфейс</button>
+        </div>
+
+        <!-- TAB: Mode -->
+        <div class="tab-panel active" id="tabMode">
             <div class="setting-group" id="setNumbers">
-                <h3>🔢 Диапазон</h3>
+                <h3>🔢 Диапазон чисел</h3>
                 <div class="flex-row">
-                    <span>От:</span> <input type="number" id="inpMin" value="0" style="width: 50px;">
-                    <span>До:</span> <input type="number" id="inpMax" value="99" style="width: 50px;">
+                    <span style="font-size:0.8rem">От:</span>
+                    <input type="number" id="inpMin" value="0" style="width:55px">
+                    <span style="font-size:0.8rem">До:</span>
+                    <input type="number" id="inpMax" value="99" style="width:55px">
                 </div>
             </div>
 
-            <div class="setting-group" id="setCards" style="display:none;">
-                <h3>🃏 Фильтр Карт</h3>
+            <div class="setting-group" id="setCards" style="display:none">
+                <h3>🃏 Фильтр карт</h3>
                 <div class="flex-row">
-                    <label class="checkbox-label"><input type="checkbox" id="cS" checked> ♠</label>
-                    <label class="checkbox-label"><input type="checkbox" id="cH" checked> ♥</label>
-                    <label class="checkbox-label"><input type="checkbox" id="cD" checked> ♦</label>
-                    <label class="checkbox-label"><input type="checkbox" id="cC" checked> ♣</label>
+                    <label class="checkbox-label"><input type="checkbox" id="cS" checked>♠</label>
+                    <label class="checkbox-label"><input type="checkbox" id="cH" checked>♥</label>
+                    <label class="checkbox-label"><input type="checkbox" id="cD" checked>♦</label>
+                    <label class="checkbox-label"><input type="checkbox" id="cC" checked>♣</label>
                 </div>
                 <div class="flex-row">
-                    <label class="checkbox-label"><input type="checkbox" id="rLow" checked> 2-5</label>
-                    <label class="checkbox-label"><input type="checkbox" id="rMid" checked> 6-10</label>
-                    <label class="checkbox-label"><input type="checkbox" id="rHigh" checked> Фигуры</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rLow" checked>2–5</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rMid" checked>6–10</label>
+                    <label class="checkbox-label"><input type="checkbox" id="rHigh" checked>Фигуры</label>
                 </div>
             </div>
 
-            <div class="setting-group" id="setPhones" style="display:none;">
-                <h3>📱 Телефоны (РФ / КЗ)</h3>
+            <div class="setting-group" id="setPhones" style="display:none">
+                <h3>📱 Телефоны</h3>
                 <div class="flex-row">
-                    <select id="selPhoneRegion" style="flex:1;">
-                        <option value="rnd">🎲 Вперемешку (РФ+КЗ)</option>
-                        <option value="ru">🇷🇺 РФ (+7 9xx)</option>
-                        <option value="kz">🇰🇿 КЗ (+7 7xx)</option>
+                    <select id="selPhoneRegion" style="flex:1">
+                        <option value="rnd">🎲 РФ + КЗ вперемешку</option>
+                        <option value="ru">🇷🇺 Россия (+7 9xx)</option>
+                        <option value="kz">🇰🇿 Казахстан (+7 7xx)</option>
                     </select>
                 </div>
-                <div class="flex-row" style="margin-top: 10px;">
-                    <span style="font-size: 0.8rem;">Пауза между блоками:</span>
-                    <input type="number" id="inpPhonePause" value="1.0" step="0.5" style="width: 50px;"> <span style="font-size: 0.8rem;">сек</span>
-                </div>
-                <div class="flex-row">
-                    <span style="font-size: 0.8rem;">Темп речи диктора:</span>
-                    <input type="number" id="inpPhoneRate" value="1.0" step="0.1" style="width: 50px;">
+                <div class="flex-row" style="margin-top:6px">
+                    <span style="font-size:0.8rem">Пауза (сек):</span>
+                    <input type="number" id="inpPhonePause" value="1.0" step="0.5" style="width:50px">
+                    <span style="font-size:0.8rem">Темп:</span>
+                    <input type="number" id="inpPhoneRate" value="1.0" step="0.1" style="width:50px">
                 </div>
             </div>
 
-            <div class="setting-group" id="setDates" style="display:none;">
+            <div class="setting-group" id="setDates" style="display:none">
                 <h3>📅 Диапазон дат</h3>
                 <div class="flex-row">
-                    <span>Год от:</span> <input type="number" id="inpYearFrom" value="1900" style="width:60px;">
-                    <span>до:</span> <input type="number" id="inpYearTo" value="2100" style="width:60px;">
+                    <span style="font-size:0.8rem">Год:</span>
+                    <input type="number" id="inpYearFrom" value="1900" style="width:62px">
+                    <span style="font-size:0.8rem">–</span>
+                    <input type="number" id="inpYearTo" value="2100" style="width:62px">
                 </div>
                 <div class="flex-row">
-                    <span>Месяц от:</span> <input type="number" id="inpMonthFrom" value="1" min="1" max="12" style="width:50px;">
-                    <span>до:</span> <input type="number" id="inpMonthTo" value="12" min="1" max="12" style="width:50px;">
+                    <span style="font-size:0.8rem">Месяц:</span>
+                    <input type="number" id="inpMonthFrom" value="1" min="1" max="12" style="width:48px">
+                    <span style="font-size:0.8rem">–</span>
+                    <input type="number" id="inpMonthTo" value="12" min="1" max="12" style="width:48px">
                 </div>
                 <div class="flex-row">
-                    <span>День от:</span> <input type="number" id="inpDayFrom" value="1" min="1" max="31" style="width:50px;">
-                    <span>до:</span> <input type="number" id="inpDayTo" value="31" min="1" max="31" style="width:50px;">
+                    <span style="font-size:0.8rem">День:</span>
+                    <input type="number" id="inpDayFrom" value="1" min="1" max="31" style="width:48px">
+                    <span style="font-size:0.8rem">–</span>
+                    <input type="number" id="inpDayTo" value="31" min="1" max="31" style="width:48px">
                 </div>
-                <label class="checkbox-label block">
-                    <span>🔁 Уникальные даты (без повторов)</span>
+                <label class="checkbox-label block" style="margin-top:8px">
+                    <span>🔁 Уникальные (без повторов)</span>
                     <input type="checkbox" id="chkDateUnique" checked>
                 </label>
-                <label class="checkbox-label block">
-                    <span>📝 Показывать месяц словами</span>
+                <label class="checkbox-label block" style="margin-top:6px">
+                    <span>📝 Месяц словами</span>
                     <input type="checkbox" id="chkDateWords">
+                </label>
+                <label class="checkbox-label block" style="margin-top:6px">
+                    <span>🔄 3 попытки на ответ</span>
+                    <input type="checkbox" id="chkDate3tries" checked>
                 </label>
             </div>
 
-            <div class="setting-group" id="setGeneralOpts">
-                <h3>⚡ Функции тренировки</h3>
-                <div class="flex-row" id="chunkRow">
-                    <span style="font-size: 0.85rem;">Показывать по (шт):</span>
-                    <select id="selChunk" style="width: 60px;">
-                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <div class="setting-group" id="setPi" style="display:none">
+                <h3>π Число Пи</h3>
+                <div class="flex-row">
+                    <span style="font-size:0.8rem">Начинать с позиции:</span>
+                    <input type="number" id="inpPiStart" value="0" min="0" max="999" style="width:60px">
+                </div>
+                <div class="flex-row">
+                    <span style="font-size:0.8rem">Показывать цифр за раз:</span>
+                    <select id="selPiChunk" style="width:60px">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
                     </select>
                 </div>
-                <label class="checkbox-label block"><span>⏱ Секундомер сессии</span> <input type="checkbox" id="chkTimer" checked></label>
-                <label class="checkbox-label block"><span>📳 Вибрация (Haptic)</span> <input type="checkbox" id="chkHaptic" checked></label>
-                <label class="checkbox-label block"><span style="color: var(--primary);">👻 Слепой режим (Фантом)</span> <input type="checkbox" id="chkPhantom"></label>
+                <div class="flex-row" style="margin-top:6px">
+                    <label class="checkbox-label block">
+                        <span>🔤 Режим набора (проверка по цифрам)</span>
+                        <input type="checkbox" id="chkPiInput" checked>
+                    </label>
+                </div>
+                <div id="piStats" style="font-size:0.75rem; color:var(--text3); margin-top:8px; font-family:var(--mono)">
+                    π рекорд: <span id="piRecord">—</span> цифр подряд
+                </div>
             </div>
 
+            <div class="setting-group" id="setCustomImages">
+                <h3>🧠 Свои образы</h3>
+                <textarea id="inpImages" placeholder="01=Нео&#10;AS=Смерть&#10;KH=Наполеон"></textarea>
+            </div>
+        </div>
+
+        <!-- TAB: Train -->
+        <div class="tab-panel" id="tabTrain">
             <div class="setting-group">
-                <h3>🖥 Интерфейс</h3>
-                <label class="checkbox-label block"><span>Счетчик (в углу)</span> <input type="checkbox" id="chkPill" checked></label>
-                <label class="checkbox-label block"><span>История (лента снизу)</span> <input type="checkbox" id="chkHistory" checked></label>
-                <div class="flex-row" style="justify-content: space-between; background: var(--surface-light); padding: 8px; border-radius: 8px;">
-                    <span style="font-size: 0.8rem;">Кнопка "Проверить"</span>
+                <h3>📦 Показывать по (штук)</h3>
+                <div class="flex-row" id="chunkRow">
+                    <select id="selChunk" style="width:70px">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-group">
+                <h3>⏱ Авто-скорость</h3>
+                <div class="flex-row">
+                    <input type="number" id="inpTimer" value="3.0" step="0.5" style="width:65px"> сек
+                </div>
+            </div>
+            <div class="setting-group">
+                <h3>💡 Опции</h3>
+                <label class="checkbox-label block" style="margin-bottom:6px"><span>⏱ Секундомер сессии</span><input type="checkbox" id="chkTimer" checked></label>
+                <label class="checkbox-label block" style="margin-bottom:6px"><span>📳 Вибрация (Haptic)</span><input type="checkbox" id="chkHaptic" checked></label>
+                <label class="checkbox-label block"><span style="color:var(--primary)">👻 Слепой режим (Фантом)</span><input type="checkbox" id="chkPhantom"></label>
+            </div>
+        </div>
+
+        <!-- TAB: UI -->
+        <div class="tab-panel" id="tabUI">
+            <div class="setting-group">
+                <h3>🎨 Тема цвета</h3>
+                <div class="theme-row">
+                    <div class="theme-swatch active" style="background:#a78bfa" data-theme="" onclick="setTheme('',this)" title="Фиолетовый"></div>
+                    <div class="theme-swatch" style="background:#38bdf8" data-theme="theme-ocean" onclick="setTheme('theme-ocean',this)" title="Океан"></div>
+                    <div class="theme-swatch" style="background:#f472b6" data-theme="theme-rose" onclick="setTheme('theme-rose',this)" title="Розовый"></div>
+                    <div class="theme-swatch" style="background:#fbbf24" data-theme="theme-gold" onclick="setTheme('theme-gold',this)" title="Золото"></div>
+                </div>
+            </div>
+            <div class="setting-group">
+                <h3>🖥 Элементы интерфейса</h3>
+                <label class="checkbox-label block" style="margin-bottom:6px"><span>Счётчик (значок)</span><input type="checkbox" id="chkPill" checked></label>
+                <label class="checkbox-label block" style="margin-bottom:6px"><span>История (лента снизу)</span><input type="checkbox" id="chkHistory" checked></label>
+                <label class="checkbox-label block" style="margin-bottom:6px"><span>Полоска прогресса</span><input type="checkbox" id="chkProgress" checked></label>
+                <div class="flex-row" style="background:var(--surface2); padding:8px; border-radius:10px; justify-content:space-between;">
+                    <span style="font-size:0.8rem">Кнопка «Проверить»</span>
                     <select id="selVerify">
                         <option value="always">Всегда</option>
                         <option value="end">В конце</option>
@@ -365,798 +659,1010 @@
                     </select>
                 </div>
             </div>
-
-            <div class="setting-group" id="setCustomImages">
-                <h3>🧠 Свои образы (Опционально)</h3>
-                <textarea id="inpImages" placeholder="01=Нео&#10;AS=Смерть"></textarea>
+            <div class="setting-group" style="border:none">
+                <h3>🗑 Данные</h3>
+                <button class="btn-secondary" style="width:100%" onclick="clearStats()">Очистить статистику</button>
             </div>
-
-            <div class="setting-group" style="border:none; margin-bottom: 0;">
-                <div class="flex-row" style="justify-content: center;">
-                    <span style="font-size: 0.9rem;">Скорость Авто (След. экран):</span>
-                    <input type="number" id="inpTimer" value="3.0" step="0.5" style="width: 60px;"> сек
-                </div>
-            </div>
-
-            <button class="btn-close" onclick="closeSettings()">Применить и Начать</button>
         </div>
+
+        <button class="btn-primary" onclick="closeSettings()">✓ Применить и начать</button>
     </div>
+</div>
 
-    <div class="modal" id="modalRecall">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-title">Дворец Памяти</div>
-            <div class="recall-timer" id="recallTimerBox"></div>
-            
-            <div class="recall-grid" id="recallGrid"></div>
-
-            <div class="action-row">
-                <button class="action-btn" onclick="revealAll()">Открыть всё</button>
-                <button class="action-btn" style="background:var(--primary); color:#000;" onclick="exportData()">Скопировать</button>
-            </div>
-            <button class="btn-close" style="background:#333; color:white; margin-top: 15px;" onclick="closeRecall()">Закрыть</button>
+<!-- ══ RECALL MODAL ══ -->
+<div class="modal" id="modalRecall">
+    <div class="modal-content" style="max-width:500px">
+        <div class="modal-title">🧠 ДВОРЕЦ ПАМЯТИ</div>
+        <div class="recall-timer" id="recallTimerBox"></div>
+        <div class="recall-stats" id="recallStats"></div>
+        <div class="recall-grid" id="recallGrid"></div>
+        <div class="action-row">
+            <button class="action-btn" onclick="revealAll()">Открыть всё</button>
+            <button class="action-btn" style="background:var(--primary);color:#fff" onclick="exportData()">Скопировать</button>
         </div>
+        <button class="btn-secondary" style="width:100%;margin-top:12px" onclick="closeRecall()">Закрыть</button>
     </div>
+</div>
 
-    <script>
-        const UI = {
-            topBar: document.getElementById('topBar'), stage: document.getElementById('stage'),
-            container: document.getElementById('displayContainer'), history: document.getElementById('history'),
-            pill: document.getElementById('statusPill'), btnVerify: document.getElementById('btnVerify'),
-            btnReplay: document.getElementById('btnReplay'), btnUnique: document.getElementById('btnUnique'),
-            modals: { set: document.getElementById('modalSettings'), rec: document.getElementById('modalRecall') },
-            icons: { mode: document.getElementById('iconMode'), unq: document.getElementById('iconUnique'), auto: document.getElementById('iconAuto'), snd: document.getElementById('iconSound') },
-            blocks: { num: document.getElementById('setNumbers'), card: document.getElementById('setCards'), phone: document.getElementById('setPhones'), customImg: document.getElementById('setCustomImages'), chunkRow: document.getElementById('chunkRow') }
+<!-- ══ STATS MODAL ══ -->
+<div class="modal" id="modalStats">
+    <div class="modal-content" style="max-width:500px">
+        <div class="modal-title">📊 СТАТИСТИКА</div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div style="font-size:0.7rem;color:var(--text3);text-align:center;margin-top:4px;letter-spacing:1px">ВСЁ ВРЕМЯ</div>
+        <div class="achievements-list" id="achievementsList"></div>
+        <button class="btn-secondary" style="width:100%;margin-top:14px" onclick="document.getElementById('modalStats').classList.remove('open')">Закрыть</button>
+    </div>
+</div>
+
+<script>
+// ═══ ЧИСЛО ПИ (1000 цифр) ═══
+const PI_DIGITS = "31415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989";
+
+// ═══ КОНСТАНТЫ ═══
+const SUITS = {'S':'♠','H':'♥','D':'♦','C':'♣'};
+const VALS  = {'2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','0':'10','J':'В','Q':'Д','K':'К','A':'Т'};
+// ИСПРАВЛЕНО: getUTCDay() возвращает 0=воскресенье, 1=понедельник...
+const DAYS = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+let allCardCodes = [];
+['S','H','D','C'].forEach(s => Object.keys(VALS).forEach(v => allCardCodes.push(v+s)));
+allCardCodes.forEach(c => new Image().src = `https://deckofcardsapi.com/static/img/${c}.png`);
+
+const ACHIEVEMENTS = [
+    { id:'first',   icon:'🌱', name:'Первый шаг',     desc:'Начать первую сессию' },
+    { id:'s5',      icon:'🔥', name:'Серия 5',         desc:'5 правильных дат подряд' },
+    { id:'s10',     icon:'💥', name:'Серия 10',        desc:'10 правильных дат подряд' },
+    { id:'s20',     icon:'⚡', name:'Серия 20',        desc:'20 правильных дат подряд' },
+    { id:'pi10',    icon:'π',  name:'Пи-нициал',       desc:'10 цифр π без ошибок' },
+    { id:'pi50',    icon:'∞',  name:'Пи-энтузиаст',   desc:'50 цифр π без ошибок' },
+    { id:'deck',    icon:'🃏', name:'Полная колода',   desc:'Пройти всю колоду карт' },
+    { id:'total100',icon:'💯', name:'100 элементов',  desc:'100 элементов в истории' },
+];
+
+// ═══ STATE ═══
+let S = {
+    mode: 'numbers',
+    unique: false, auto: null, sound: false, started: false,
+    deck: [], sessionSeq: [], histView: [], voices: [], customMap: {},
+    timeStart: null, timeEnd: null, prefs: {},
+    currentAudioChunks: [], audioTimeouts: [],
+    // dates
+    dateDeck: [], currentDate: null, currentDay: null,
+    correctCount: 0, totalCount: 0,
+    dateAnswered: false, streak: 0, maxStreak: 0, dateWords: false,
+    attempts: 0, wrongButtons: [],
+    // PI
+    piPos: 0, piStreak: 0, piMaxStreak: 0, piInputMode: true, piChunk: 3, piAnswered: false,
+    theme: '',
+};
+
+const UI = {
+    topBar:    document.getElementById('topBar'),
+    container: document.getElementById('displayContainer'),
+    history:   document.getElementById('history'),
+    pill:      document.getElementById('statusPill'),
+    btnVerify: document.getElementById('btnVerify'),
+    btnReplay: document.getElementById('btnReplay'),
+    btnUnique: document.getElementById('btnUnique'),
+    progress:  document.getElementById('progressBar'),
+    modals: {
+        set:   document.getElementById('modalSettings'),
+        rec:   document.getElementById('modalRecall'),
+        stats: document.getElementById('modalStats'),
+    },
+    icons: {
+        mode: document.getElementById('iconMode'),
+        unq:  document.getElementById('iconUnique'),
+        auto: document.getElementById('iconAuto'),
+        snd:  document.getElementById('iconSound'),
+    },
+    blocks: {
+        num:      document.getElementById('setNumbers'),
+        card:     document.getElementById('setCards'),
+        phone:    document.getElementById('setPhones'),
+        customImg:document.getElementById('setCustomImages'),
+        chunkRow: document.getElementById('chunkRow'),
+    }
+};
+
+// ═══ PERSISTENCE ═══
+function loadState() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('mz9_state') || '{}');
+        if (saved.theme) setTheme(saved.theme, null, true);
+        // restore settings to inputs
+        const map = {
+            inpMin:'0', inpMax:'99', inpTimer:'3.0', inpPhonePause:'1.0', inpPhoneRate:'1.0',
+            inpYearFrom:'1900', inpYearTo:'2100', inpMonthFrom:'1', inpMonthTo:'12',
+            inpDayFrom:'1', inpDayTo:'31', inpPiStart:'0', selPiChunk:'3',
         };
-
-        const SUITS = { 'S':'♠', 'H':'♥', 'D':'♦', 'C':'♣' };
-        const VALS = { '2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','0':'10','J':'В','Q':'Д','K':'К','A':'Т' };
-        const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
-        const MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-        let allCardCodes = [];
-        ['S','H','D','C'].forEach(s => Object.keys(VALS).forEach(v => allCardCodes.push(v+s)));
-        allCardCodes.forEach(c => new Image().src = `https://deckofcardsapi.com/static/img/${c}.png`);
-
-        let S = {
-            mode: 'numbers',
-            unique: false, auto: null, sound: false, started: false,
-            deck: [], sessionSeq: [], histView: [], voices: [], customMap: {},
-            timeStart: null, timeEnd: null, prefs: {},
-            currentAudioChunks: [], audioTimeouts: [],
-            // даты
-            dateDeck: [],
-            currentDate: null,
-            currentDay: null,
-            correctCount: 0,
-            totalCount: 0,
-            dateAnswered: false,
-            streak: 0,
-            maxStreak: 0,
-            dateWords: false,
-            attempts: 0,          // количество попыток для текущей даты (0,1,2)
-            wrongButtons: []      // индексы уже нажатых неправильных кнопок
-        };
-
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.onvoiceschanged = () => S.voices = window.speechSynthesis.getVoices();
-            setTimeout(() => window.speechSynthesis.getVoices(), 500);
-        }
-
-        // --- Утилиты ---
-        function parseCustomImages() {
-            S.customMap = {};
-            const lines = document.getElementById('inpImages').value.split('\n');
-            lines.forEach(l => {
-                let p = l.split('=');
-                if(p.length === 2) {
-                    let k = p[0].trim().toUpperCase(); if(k==='10') k='0';
-                    S.customMap[k] = p[1].trim();
-                }
+        if (saved.inputs) {
+            Object.keys(saved.inputs).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = saved.inputs[id];
             });
         }
-
-        function vibrate(type) {
-            if(!S.prefs.haptic || !navigator.vibrate) return;
-            if(type === 'short') navigator.vibrate(30);
-            if(type === 'long') navigator.vibrate([100, 50, 100, 50, 200]);
+        const checks = ['chkTimer','chkHaptic','chkPhantom','chkPill','chkHistory','chkProgress',
+                        'chkDateUnique','chkDateWords','chkDate3tries','chkPiInput'];
+        if (saved.checks) {
+            checks.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && saved.checks[id] !== undefined) el.checked = saved.checks[id];
+            });
         }
-
-        function stopAudio() {
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-            S.audioTimeouts.forEach(t => clearTimeout(t));
-            S.audioTimeouts = [];
+        if (saved.mode) {
+            S.mode = saved.mode;
+            syncModeUI();
         }
+        // PI record
+        const piRec = parseInt(localStorage.getItem('mz9_pi_record') || '0');
+        document.getElementById('piRecord').textContent = piRec || '—';
+    } catch(e) {}
+}
 
-        function speakText(text, rate = 1.0) {
-            if (!S.sound) return;
-            if (window.AndroidApp) {
-                window.AndroidApp.speak(text);
-                return;
-            }
-            if (!('speechSynthesis' in window)) return;
-            let ut = new SpeechSynthesisUtterance(text);
+function saveState() {
+    try {
+        const inputs = {};
+        ['inpMin','inpMax','inpTimer','inpPhonePause','inpPhoneRate',
+         'inpYearFrom','inpYearTo','inpMonthFrom','inpMonthTo','inpDayFrom','inpDayTo',
+         'inpPiStart','selPiChunk'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) inputs[id] = el.value;
+        });
+        const checks = {};
+        ['chkTimer','chkHaptic','chkPhantom','chkPill','chkHistory','chkProgress',
+         'chkDateUnique','chkDateWords','chkDate3tries','chkPiInput'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) checks[id] = el.checked;
+        });
+        localStorage.setItem('mz9_state', JSON.stringify({ theme: S.theme, inputs, checks, mode: S.mode }));
+    } catch(e) {}
+}
+
+// ═══ STATS ═══
+function getStats() {
+    return JSON.parse(localStorage.getItem('mz9_stats') || '{"sessions":0,"totalItems":0,"totalCorrect":0,"totalDates":0,"bestStreak":0,"bestPi":0,"unlocked":[]}');
+}
+function saveStats(st) { localStorage.setItem('mz9_stats', JSON.stringify(st)); }
+
+function recordSession() {
+    const st = getStats();
+    st.sessions++;
+    st.totalItems += S.sessionSeq.length;
+    if (S.mode === 'dates') {
+        st.totalCorrect += S.correctCount;
+        st.totalDates   += S.totalCount;
+        if (S.maxStreak > st.bestStreak) st.bestStreak = S.maxStreak;
+    }
+    if (S.mode === 'pi') {
+        if (S.piMaxStreak > st.bestPi) st.bestPi = S.piMaxStreak;
+    }
+    // achievements
+    if (!st.unlocked.includes('first')) { st.unlocked.push('first'); showAchievement('first'); }
+    if (S.maxStreak >= 5  && !st.unlocked.includes('s5'))  { st.unlocked.push('s5');  showAchievement('s5'); }
+    if (S.maxStreak >= 10 && !st.unlocked.includes('s10')) { st.unlocked.push('s10'); showAchievement('s10'); }
+    if (S.maxStreak >= 20 && !st.unlocked.includes('s20')) { st.unlocked.push('s20'); showAchievement('s20'); }
+    if (S.piMaxStreak >= 10 && !st.unlocked.includes('pi10')) { st.unlocked.push('pi10'); showAchievement('pi10'); }
+    if (S.piMaxStreak >= 50 && !st.unlocked.includes('pi50')) { st.unlocked.push('pi50'); showAchievement('pi50'); }
+    if (S.mode === 'cards' && S.sessionSeq.length >= 52 && !st.unlocked.includes('deck')) { st.unlocked.push('deck'); showAchievement('deck'); }
+    if (st.totalItems >= 100 && !st.unlocked.includes('total100')) { st.unlocked.push('total100'); showAchievement('total100'); }
+    saveStats(st);
+}
+
+function showAchievement(id) {
+    const a = ACHIEVEMENTS.find(x => x.id === id); if (!a) return;
+    const el = document.createElement('div');
+    el.className = 'achievement-toast';
+    el.textContent = `${a.icon} ${a.name} — разблокировано!`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
+}
+
+window.clearStats = function() {
+    if (confirm('Очистить всю статистику и достижения?')) {
+        localStorage.removeItem('mz9_stats');
+        alert('Статистика сброшена.');
+    }
+};
+
+window.openStats = function() {
+    if (S.auto) window.toggleAuto();
+    const st = getStats();
+    const piRec = parseInt(localStorage.getItem('mz9_pi_record') || '0');
+    const acc = st.totalDates > 0 ? Math.round(st.totalCorrect / st.totalDates * 100) : 0;
+
+    document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card"><div class="sv">${st.sessions}</div><div class="sk">Сессий</div></div>
+        <div class="stat-card accent"><div class="sv">${st.totalItems}</div><div class="sk">Элементов</div></div>
+        <div class="stat-card warn"><div class="sv">${st.bestStreak}</div><div class="sk">Рекорд серии</div></div>
+        <div class="stat-card pink"><div class="sv">${acc}%</div><div class="sk">Точность дат</div></div>
+        <div class="stat-card"><div class="sv">${piRec || '—'}</div><div class="sk">Рекорд π</div></div>
+        <div class="stat-card accent"><div class="sv">${st.unlocked.length}/${ACHIEVEMENTS.length}</div><div class="sk">Достижений</div></div>
+    `;
+    const list = document.getElementById('achievementsList');
+    list.innerHTML = '';
+    ACHIEVEMENTS.forEach(a => {
+        const d = document.createElement('div');
+        d.className = 'achievement-item' + (st.unlocked.includes(a.id) ? ' unlocked' : '');
+        d.innerHTML = `<div class="ach-icon">${a.icon}</div><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>`;
+        list.appendChild(d);
+    });
+    document.getElementById('modalStats').classList.add('open');
+};
+
+// ═══ AUDIO ═══
+function vibrate(type) {
+    if (!S.prefs.haptic || !navigator.vibrate) return;
+    if (type === 'short') navigator.vibrate(30);
+    if (type === 'long')  navigator.vibrate([100,50,100,50,200]);
+}
+function stopAudio() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    S.audioTimeouts.forEach(t => clearTimeout(t)); S.audioTimeouts = [];
+}
+function speakText(text, rate=1.0) {
+    if (!S.sound) return;
+    if (!('speechSynthesis' in window)) return;
+    let ut = new SpeechSynthesisUtterance(text);
+    ut.lang = 'ru-RU'; ut.rate = rate;
+    let rv = S.voices.filter(v => v.lang.startsWith('ru'));
+    if (rv.length > 0) ut.voice = rv.find(v => v.name.includes('Google') || v.name.includes('Premium')) || rv[0];
+    window.speechSynthesis.speak(ut);
+}
+function speakDate(date) {
+    if (!S.sound) return;
+    speakText(`${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`, 0.9);
+}
+function playAudioSequence(chunks) {
+    if (!S.sound) return;
+    stopAudio();
+    let rate    = S.mode === 'phones' ? (parseFloat(document.getElementById('inpPhoneRate').value) || 1.0) : 1.0;
+    let pauseMs = S.mode === 'phones' ? (parseFloat(document.getElementById('inpPhonePause').value) || 0) * 1000 : 0;
+    S.currentAudioChunks = chunks;
+    const playNext = (index) => {
+        if (index >= chunks.length) return;
+        let item = chunks[index], phrase = item.text;
+        if (phrase === 'СТАРТ') phrase = 'Начинаем';
+        else if (phrase === 'ВСЁ') phrase = 'Всё, готово';
+        else if (item.isCard) {
+            const sv = {'S':'пик','H':'червей','D':'бубен','C':'треф'};
+            const vv = {'2':'Двойка','3':'Тройка','4':'Четверка','5':'Пятерка','6':'Шестерка','7':'Семерка','8':'Восьмерка','9':'Девятка','0':'Десятка','J':'Валет','Q':'Дама','K':'Король','A':'Туз'};
+            phrase = `${vv[item.text[0]]} ${sv[item.text[1]]}`;
+        } else {
+            const n = parseInt(item.text);
+            if (item.text.startsWith('0') && item.text.length === 2 && n < 10 && n > 0) phrase = 'Ноль ' + n;
+            else if (item.text === '00') phrase = 'Ноль ноль';
+        }
+        if ('speechSynthesis' in window) {
+            let ut = new SpeechSynthesisUtterance(phrase);
             ut.lang = 'ru-RU'; ut.rate = rate;
-            let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
-            if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
-            window.speechSynthesis.speak(ut);
-        }
-
-        function speakDate(date) {
-            if (!S.sound) return;
-            let day = date.getUTCDate();
-            let month = MONTHS[date.getUTCMonth()];
-            let year = date.getUTCFullYear();
-            speakText(`${day} ${month} ${year}`, 0.9);
-        }
-
-        function playAudioSequence(chunks) {
-            if (!S.sound) return; 
-            stopAudio();
-            let rate = S.mode === 'phones' ? parseFloat(document.getElementById('inpPhoneRate').value) || 1.0 : 1.0;
-            let pauseMs = S.mode === 'phones' ? (parseFloat(document.getElementById('inpPhonePause').value) || 0) * 1000 : 0;
-            S.currentAudioChunks = chunks; 
-            const playNext = (index) => {
-                if(index >= chunks.length) return;
-                let item = chunks[index];
-                let phrase = item.text;
-                if (phrase === "СТАРТ" || phrase === "ВСЁ") phrase = phrase === "ВСЁ" ? "Всё! Готово" : "Начинаем";
-                else if (item.isCard) {
-                    const sv = {'S':'пик','H':'червей','D':'бубен','C':'треф'};
-                    const vv = {'2':'Двойка','3':'Тройка','4':'Четверка','5':'Пятерка','6':'Шестерка','7':'Семерка','8':'Восьмерка','9':'Девятка','0':'Десятка','J':'Валет','Q':'Дама','K':'Король','A':'Туз'};
-                    phrase = `${vv[item.text[0]]} ${sv[item.text[1]]}`;
-                } else {
-                    let num = parseInt(item.text);
-                    if (item.text.startsWith('0') && item.text.length === 2 && num < 10 && num > 0) phrase = "Ноль " + num;
-                    else if (item.text === "00") phrase = "Ноль ноль";
-                    else if (item.text.length === 3 && item.text.startsWith('00')) phrase = "Ноль ноль " + parseInt(item.text);
-                    else if (item.text.length === 3 && item.text.startsWith('0')) phrase = "Ноль " + parseInt(item.text);
-                }
-                if (window.AndroidApp) {
-                    window.AndroidApp.speak(phrase);
-                    if(index + 1 < chunks.length) {
-                        let t = setTimeout(() => playNext(index + 1), pauseMs + 1000); 
-                        S.audioTimeouts.push(t);
-                    }
-                } else if ('speechSynthesis' in window) {
-                    let ut = new SpeechSynthesisUtterance(phrase);
-                    ut.lang = 'ru-RU'; ut.rate = rate;
-                    let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
-                    if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
-                    ut.onend = () => {
-                        if(index + 1 < chunks.length) {
-                            let t = setTimeout(() => playNext(index + 1), pauseMs);
-                            S.audioTimeouts.push(t);
-                        }
-                    };
-                    window.speechSynthesis.speak(ut);
+            let rv = S.voices.filter(v => v.lang.startsWith('ru'));
+            if (rv.length) ut.voice = rv.find(v => v.name.includes('Google') || v.name.includes('Premium')) || rv[0];
+            ut.onend = () => {
+                if (index + 1 < chunks.length) {
+                    let t = setTimeout(() => playNext(index + 1), pauseMs);
+                    S.audioTimeouts.push(t);
                 }
             };
-            playNext(0);
+            window.speechSynthesis.speak(ut);
         }
+    };
+    playNext(0);
+}
+window.replayAudio = function(e) {
+    e.stopPropagation(); vibrate('short');
+    if (S.currentAudioChunks && S.currentAudioChunks.length > 0) playAudioSequence(S.currentAudioChunks);
+};
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => S.voices = window.speechSynthesis.getVoices();
+    setTimeout(() => S.voices = window.speechSynthesis.getVoices(), 500);
+}
 
-        window.replayAudio = function(e) {
-            e.stopPropagation();
-            vibrate('short');
-            if(S.currentAudioChunks && S.currentAudioChunks.length > 0) playAudioSequence(S.currentAudioChunks);
+// ═══ SETTINGS ═══
+window.switchTab = function(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const idx = ['tabMode','tabTrain','tabUI'].indexOf(id);
+    document.querySelectorAll('.modal-tab')[idx].classList.add('active');
+};
+
+function readPreferences() {
+    S.prefs.showHistory = document.getElementById('chkHistory').checked;
+    S.prefs.showPill    = document.getElementById('chkPill').checked;
+    S.prefs.showProgress= document.getElementById('chkProgress').checked;
+    S.prefs.verifyMode  = document.getElementById('selVerify').value;
+    S.prefs.chunkSize   = (S.mode === 'phones' || S.mode === 'dates' || S.mode === 'pi') ? 1 : parseInt(document.getElementById('selChunk').value);
+    S.prefs.timer       = document.getElementById('chkTimer').checked;
+    S.prefs.haptic      = document.getElementById('chkHaptic').checked;
+    S.prefs.phantom     = document.getElementById('chkPhantom').checked;
+    S.prefs.date3tries  = document.getElementById('chkDate3tries').checked;
+
+    S.prefs.yearFrom  = parseInt(document.getElementById('inpYearFrom').value) || 1900;
+    S.prefs.yearTo    = parseInt(document.getElementById('inpYearTo').value)   || 2100;
+    S.prefs.monthFrom = parseInt(document.getElementById('inpMonthFrom').value) || 1;
+    S.prefs.monthTo   = parseInt(document.getElementById('inpMonthTo').value)   || 12;
+    S.prefs.dayFrom   = parseInt(document.getElementById('inpDayFrom').value)   || 1;
+    S.prefs.dayTo     = parseInt(document.getElementById('inpDayTo').value)     || 31;
+    S.prefs.dateUnique= document.getElementById('chkDateUnique').checked;
+    S.dateWords       = document.getElementById('chkDateWords').checked;
+
+    S.piInputMode     = document.getElementById('chkPiInput').checked;
+    S.piChunk         = parseInt(document.getElementById('selPiChunk').value) || 3;
+
+    parseCustomImages();
+    UI.history.style.opacity = S.prefs.showHistory ? '1' : '0';
+    UI.progress.parentElement.style.display = S.prefs.showProgress ? 'block' : 'none';
+    document.body.classList.toggle('phantom-mode', S.prefs.phantom);
+    UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) && S.started ? 'flex' : 'none';
+    updateStatus(); checkVerifyVisibility();
+}
+
+function parseCustomImages() {
+    S.customMap = {};
+    const lines = document.getElementById('inpImages').value.split('\n');
+    lines.forEach(l => {
+        const p = l.split('=');
+        if (p.length === 2) {
+            let k = p[0].trim().toUpperCase(); if (k === '10') k = '0';
+            S.customMap[k] = p[1].trim();
         }
+    });
+}
 
-        // --- Настройки ---
-        function readPreferences() {
-            S.prefs.showHistory = document.getElementById('chkHistory').checked;
-            S.prefs.showPill = document.getElementById('chkPill').checked;
-            S.prefs.verifyMode = document.getElementById('selVerify').value;
-            S.prefs.chunkSize = S.mode === 'phones' ? 1 : parseInt(document.getElementById('selChunk').value);
-            S.prefs.timer = document.getElementById('chkTimer').checked;
-            S.prefs.haptic = document.getElementById('chkHaptic').checked;
-            S.prefs.phantom = document.getElementById('chkPhantom').checked;
-            
-            S.prefs.yearFrom = parseInt(document.getElementById('inpYearFrom').value) || 1900;
-            S.prefs.yearTo = parseInt(document.getElementById('inpYearTo').value) || 2100;
-            S.prefs.monthFrom = parseInt(document.getElementById('inpMonthFrom').value) || 1;
-            S.prefs.monthTo = parseInt(document.getElementById('inpMonthTo').value) || 12;
-            S.prefs.dayFrom = parseInt(document.getElementById('inpDayFrom').value) || 1;
-            S.prefs.dayTo = parseInt(document.getElementById('inpDayTo').value) || 31;
-            S.prefs.dateUnique = document.getElementById('chkDateUnique').checked;
-            S.dateWords = document.getElementById('chkDateWords').checked;
+function checkVerifyVisibility(isFinished=false) {
+    if (!S.started || S.prefs.verifyMode === 'hide') { UI.btnVerify.classList.remove('visible'); return; }
+    if (S.prefs.verifyMode === 'always' || (S.prefs.verifyMode === 'end' && isFinished)) UI.btnVerify.classList.add('visible');
+    else UI.btnVerify.classList.remove('visible');
+}
 
-            parseCustomImages();
-            UI.history.style.opacity = S.prefs.showHistory ? '1' : '0';
-            document.body.className = S.prefs.phantom ? 'phantom-mode' : '';
-            
-            UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) && S.started ? 'flex' : 'none';
-            updateStatus(); checkVerifyVisibility();
-        }
+function updateStatus() {
+    if (!S.prefs.showPill) { UI.pill.classList.remove('visible'); return; }
+    let txt = [];
+    if (S.auto) txt.push('▶ АВТО');
+    if (S.mode === 'dates' && S.started) {
+        txt.push(`✅ ${S.correctCount}/${S.totalCount}`);
+        if (S.streak > 1) txt.push(`🔥${S.streak}`);
+    } else if (S.mode === 'pi' && S.started) {
+        txt.push(`π #${S.piPos}`);
+        if (S.piStreak > 1) txt.push(`🔥${S.piStreak}`);
+    } else if (S.mode !== 'phones' && S.unique && S.started) {
+        txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
+    } else if (S.started && S.mode !== 'dates') {
+        txt.push(`В ПАМЯТИ: ${S.sessionSeq.length}`);
+    }
+    UI.pill.textContent = txt.join(' | ');
+    UI.pill.classList.toggle('visible', txt.length > 0);
+}
 
-        function checkVerifyVisibility(isFinished = false) {
-            if (!S.started || S.prefs.verifyMode === 'hide') { UI.btnVerify.classList.remove('visible'); return; }
-            if (S.prefs.verifyMode === 'always' || (S.prefs.verifyMode === 'end' && isFinished)) UI.btnVerify.classList.add('visible');
-            else UI.btnVerify.classList.remove('visible');
-        }
+function updateProgress() {
+    if (!S.prefs.showProgress) return;
+    let pct = 0;
+    if (S.mode === 'dates' && S.totalCount > 0) {
+        pct = Math.min(100, S.totalCount / 30 * 100);
+    } else if (S.mode === 'pi') {
+        pct = Math.min(100, S.piPos / PI_DIGITS.length * 100);
+    } else if (S.unique && S.started) {
+        const total = S.sessionSeq.length + S.deck.length;
+        pct = total > 0 ? (S.sessionSeq.length / total * 100) : 0;
+    }
+    UI.progress.style.width = pct + '%';
+}
 
-        function updateStatus() {
-            if(!S.prefs.showPill) { UI.pill.classList.remove('visible'); return; }
-            let txt = [];
-            if (S.auto) txt.push("▶ АВТО");
-            if (S.mode === 'dates' && S.started) {
-                txt.push(`✅ ${S.correctCount}/${S.totalCount}`);
-                if (S.streak > 1) txt.push(`🔥${S.streak}`);
-            } else if (S.mode !== 'phones' && S.unique && S.started) {
-                txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
-            } else if (S.started && S.mode !== 'dates') {
-                txt.push(`В ПАМЯТИ: ${S.sessionSeq.length}`);
-            }
-            UI.pill.textContent = txt.join(" | ");
-            UI.pill.classList.toggle('visible', txt.length > 0);
-        }
+// ═══ MODE CONTROL ═══
+function syncModeUI() {
+    const MODES = ['numbers','cards','phones','dates','pi'];
+    const icons = {'numbers':'🔢','cards':'🃏','phones':'📱','dates':'📅','pi':'π'};
+    UI.icons.mode.textContent = icons[S.mode] || '🔢';
+    UI.icons.mode.classList.toggle('active', S.mode !== 'numbers');
 
-        // --- Генерация ---
-        function generatePhone() {
-            let region = document.getElementById('selPhoneRegion').value;
-            if (region === 'rnd') region = Math.random() > 0.5 ? 'ru' : 'kz';
-            let p1 = region === 'ru' ? '9' + Math.floor(Math.random()*10) + Math.floor(Math.random()*10) : '7' + ['0','4','5','7'][Math.floor(Math.random()*4)] + Math.floor(Math.random()*10);
-            let p2 = String(Math.floor(Math.random()*1000)).padStart(3, '0');
-            let p3 = String(Math.floor(Math.random()*100)).padStart(2, '0');
-            let p4 = String(Math.floor(Math.random()*100)).padStart(2, '0');
-            return { formatted: `+7 (${p1}) ${p2}-${p3}-${p4}`, audioChunks: [{text: p1}, {text: p2}, {text: p3}, {text: p4}] };
-        }
+    UI.blocks.num.style.display     = S.mode === 'numbers' ? 'block' : 'none';
+    UI.blocks.card.style.display    = S.mode === 'cards'   ? 'block' : 'none';
+    UI.blocks.phone.style.display   = S.mode === 'phones'  ? 'block' : 'none';
+    document.getElementById('setDates').style.display = S.mode === 'dates' ? 'block' : 'none';
+    document.getElementById('setPi').style.display    = S.mode === 'pi'    ? 'block' : 'none';
+    UI.blocks.customImg.style.display = (S.mode === 'phones' || S.mode === 'dates' || S.mode === 'pi') ? 'none' : 'block';
+    UI.blocks.chunkRow.style.display  = (S.mode === 'phones' || S.mode === 'dates' || S.mode === 'pi') ? 'none' : 'flex';
 
-        function buildDeck() {
-            S.deck = [];
-            if (S.mode === 'numbers') {
-                let min = parseInt(document.getElementById('inpMin').value) || 0;
-                let max = parseInt(document.getElementById('inpMax').value) || 99;
-                if (min > max) [min, max] = [max, min];
-                for (let i = min; i <= max; i++) S.deck.push(i);
-            } else if (S.mode === 'cards') {
-                const sF = [];
-                if(document.getElementById('cS').checked) sF.push('S');
-                if(document.getElementById('cH').checked) sF.push('H');
-                if(document.getElementById('cD').checked) sF.push('D');
-                if(document.getElementById('cC').checked) sF.push('C');
-                const rF = [];
-                if(document.getElementById('rLow').checked) rF.push('2','3','4','5');
-                if(document.getElementById('rMid').checked) rF.push('6','7','8','9','0');
-                if(document.getElementById('rHigh').checked) rF.push('J','Q','K','A');
-                S.deck = allCardCodes.filter(c => sF.includes(c[1]) && rF.includes(c[0]));
-            }
-            for (let i = S.deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [S.deck[i], S.deck[j]] = [S.deck[j], S.deck[i]];
-            }
-        }
+    if (S.mode === 'phones' || S.mode === 'dates' || S.mode === 'pi') {
+        UI.btnUnique.style.opacity = '0.3';
+        UI.btnUnique.style.pointerEvents = 'none';
+        if (S.unique) window.toggleUnique();
+    } else {
+        UI.btnUnique.style.opacity = '1';
+        UI.btnUnique.style.pointerEvents = 'auto';
+        if (S.mode === 'cards' && !S.unique) window.toggleUnique();
+    }
+}
 
-        function generateDate() {
-            let yFrom = S.prefs.yearFrom, yTo = S.prefs.yearTo;
-            let mFrom = S.prefs.monthFrom, mTo = S.prefs.monthTo;
-            let dFrom = S.prefs.dayFrom, dTo = S.prefs.dayTo;
-            if (yFrom > yTo) [yFrom, yTo] = [yTo, yFrom];
-            if (mFrom > mTo) [mFrom, mTo] = [mTo, mFrom];
-            if (dFrom > dTo) [dFrom, dTo] = [dTo, dFrom];
+window.toggleMode = function() {
+    const modes = ['numbers','cards','phones','dates','pi'];
+    const idx = modes.indexOf(S.mode);
+    S.mode = modes[(idx + 1) % modes.length];
+    syncModeUI();
+    resetToStart();
+};
 
-            let date, attempts = 0, maxAttempts = 1000, isValid = false;
+window.toggleUnique = function() {
+    if (S.mode === 'phones' || S.mode === 'dates' || S.mode === 'pi') return;
+    S.unique = !S.unique;
+    UI.icons.unq.textContent = S.unique ? '🔀' : '♾️';
+    UI.icons.unq.classList.toggle('active', S.unique);
+    resetToStart();
+};
 
-            if (S.unique && S.prefs.dateUnique) {
-                if (S.dateDeck.length === 0) {
-                    S.dateDeck = [];
-                    for (let y = yFrom; y <= yTo; y++) {
-                        for (let m = mFrom; m <= mTo; m++) {
-                            let daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
-                            let dStart = (m === mFrom && y === yFrom) ? dFrom : 1;
-                            let dEnd = (m === mTo && y === yTo) ? Math.min(dTo, daysInMonth) : daysInMonth;
-                            for (let d = dStart; d <= dEnd; d++) {
-                                let dt = new Date(Date.UTC(y, m-1, d));
-                                if (dt.getUTCMonth() === m-1 && dt.getUTCFullYear() === y && dt.getUTCDate() === d) S.dateDeck.push(dt);
-                            }
-                        }
+window.toggleSound = function() {
+    S.sound = !S.sound;
+    UI.icons.snd.textContent = S.sound ? '🔊' : '🔇';
+    UI.icons.snd.classList.toggle('active', S.sound);
+    if (S.sound && S.voices.length === 0 && 'speechSynthesis' in window) window.speechSynthesis.getVoices();
+};
+
+window.toggleAuto = function() {
+    if (S.auto) {
+        clearInterval(S.auto); S.auto = null;
+        UI.icons.auto.textContent = '▶️'; UI.icons.auto.classList.remove('active');
+    } else {
+        if (!S.started && S.unique && S.deck.length === 0 && S.mode !== 'phones' && S.mode !== 'dates' && S.mode !== 'pi') buildDeck();
+        window.generate();
+        const ms = parseFloat(document.getElementById('inpTimer').value) * 1000;
+        S.auto = setInterval(window.generate, ms);
+        UI.icons.auto.textContent = '⏸️'; UI.icons.auto.classList.add('active');
+    }
+    updateStatus();
+};
+
+// ═══ THEME ═══
+window.setTheme = function(cls, btn, silent=false) {
+    document.body.className = document.body.className.replace(/theme-\w+/g, '').trim();
+    if (cls) document.body.classList.add(cls);
+    if (S.prefs && S.prefs.phantom) document.body.classList.add('phantom-mode');
+    S.theme = cls;
+    document.querySelectorAll('.theme-swatch').forEach(s => {
+        s.classList.toggle('active', s.dataset.theme === cls);
+    });
+    if (!silent) saveState();
+};
+
+// ═══ GENERATION ═══
+function buildDeck() {
+    S.deck = [];
+    if (S.mode === 'numbers') {
+        let min = parseInt(document.getElementById('inpMin').value) || 0;
+        let max = parseInt(document.getElementById('inpMax').value) || 99;
+        if (min > max) [min, max] = [max, min];
+        for (let i = min; i <= max; i++) S.deck.push(i);
+    } else if (S.mode === 'cards') {
+        const sF = [];
+        if (document.getElementById('cS').checked) sF.push('S');
+        if (document.getElementById('cH').checked) sF.push('H');
+        if (document.getElementById('cD').checked) sF.push('D');
+        if (document.getElementById('cC').checked) sF.push('C');
+        const rF = [];
+        if (document.getElementById('rLow').checked)  rF.push('2','3','4','5');
+        if (document.getElementById('rMid').checked)  rF.push('6','7','8','9','0');
+        if (document.getElementById('rHigh').checked) rF.push('J','Q','K','A');
+        S.deck = allCardCodes.filter(c => sF.includes(c[1]) && rF.includes(c[0]));
+    }
+    for (let i = S.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [S.deck[i], S.deck[j]] = [S.deck[j], S.deck[i]];
+    }
+}
+
+function generatePhone() {
+    let region = document.getElementById('selPhoneRegion').value;
+    if (region === 'rnd') region = Math.random() > 0.5 ? 'ru' : 'kz';
+    let p1 = region === 'ru'
+        ? '9' + Math.floor(Math.random()*10) + Math.floor(Math.random()*10)
+        : '7' + ['0','4','5','7'][Math.floor(Math.random()*4)] + Math.floor(Math.random()*10);
+    let p2 = String(Math.floor(Math.random()*1000)).padStart(3,'0');
+    let p3 = String(Math.floor(Math.random()*100)).padStart(2,'0');
+    let p4 = String(Math.floor(Math.random()*100)).padStart(2,'0');
+    return { formatted: `+7 (${p1}) ${p2}-${p3}-${p4}`, audioChunks: [{text:p1},{text:p2},{text:p3},{text:p4}] };
+}
+
+function generateDate() {
+    let { yearFrom:yF, yearTo:yT, monthFrom:mF, monthTo:mT, dayFrom:dF, dayTo:dT } = S.prefs;
+    if (yF>yT) [yF,yT]=[yT,yF];
+    if (mF>mT) [mF,mT]=[mT,mF];
+    if (dF>dT) [dF,dT]=[dT,dF];
+
+    let date, attempts=0, isValid=false;
+
+    if (S.prefs.dateUnique) {
+        if (S.dateDeck.length === 0) {
+            S.dateDeck = [];
+            for (let y=yF; y<=yT; y++) {
+                for (let m=mF; m<=mT; m++) {
+                    let maxD = new Date(Date.UTC(y,m,0)).getUTCDate();
+                    let ds = 1, de = Math.min(dT, maxD);
+                    for (let d=ds; d<=de; d++) {
+                        let dt = new Date(Date.UTC(y, m-1, d));
+                        if (dt.getUTCMonth()===m-1 && dt.getUTCFullYear()===y && dt.getUTCDate()===d) S.dateDeck.push(dt);
                     }
-                    for (let i = S.dateDeck.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [S.dateDeck[i], S.dateDeck[j]] = [S.dateDeck[j], S.dateDeck[i]];
-                    }
-                }
-                if (S.dateDeck.length === 0) { finishSequence(); return null; }
-                date = S.dateDeck.pop();
-            } else {
-                while (attempts < maxAttempts) {
-                    let year = yFrom + Math.floor(Math.random() * (yTo - yFrom + 1));
-                    let month = mFrom + Math.floor(Math.random() * (mTo - mFrom + 1));
-                    let maxDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-                    let dayMin = (month === mFrom && year === yFrom) ? dFrom : 1;
-                    let dayMax = (month === mTo && year === yTo) ? Math.min(dTo, maxDay) : maxDay;
-                    if (dayMin > dayMax) { attempts++; continue; }
-                    let day = dayMin + Math.floor(Math.random() * (dayMax - dayMin + 1));
-                    date = new Date(Date.UTC(year, month-1, day));
-                    if (date.getUTCMonth() === month-1 && date.getUTCFullYear() === year && date.getUTCDate() === day) { isValid = true; break; }
-                    attempts++;
-                }
-                if (!isValid) { finishSequence(); return null; }
-            }
-
-            // Используем UTC для всех операций
-            S.currentDate = date;
-            S.currentDay = date.getUTCDay(); // 0=воскресенье
-            S.totalCount++;
-            S.dateAnswered = false;
-            S.attempts = 0;
-            S.wrongButtons = [];
-
-            UI.container.innerHTML = '';
-            let div = document.createElement('div');
-            div.className = 'num-item fade-in';
-            if (S.dateWords) {
-                div.classList.add('date-word');
-                let day = date.getUTCDate();
-                let month = MONTHS[date.getUTCMonth()];
-                let year = date.getUTCFullYear();
-                div.textContent = `${day} ${month} ${year}`;
-            } else {
-                let day = String(date.getUTCDate()).padStart(2,'0');
-                let month = String(date.getUTCMonth()+1).padStart(2,'0');
-                let year = date.getUTCFullYear();
-                div.textContent = `${day}.${month}.${year}`;
-            }
-            UI.container.appendChild(div);
-
-            const dayContainer = document.getElementById('dayBtnContainer');
-            dayContainer.innerHTML = '';
-            const btnBlock = document.getElementById('dayButtons');
-            btnBlock.style.display = 'flex';
-            btnBlock.style.flexDirection = 'column';
-            btnBlock.style.alignItems = 'center';
-
-            DAYS.forEach((name, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'day-btn';
-                btn.textContent = name;
-                btn.dataset.idx = idx;
-                btn.onclick = function(e) { onDaySelect(idx, this); };
-                dayContainer.appendChild(btn);
-            });
-
-            document.getElementById('btnRepeatDate').style.display = 'inline-block';
-            document.getElementById('btnSkipDate').style.display = 'inline-block';
-
-            UI.btnReplay.style.display = 'none';
-            UI.btnVerify.classList.remove('visible');
-
-            let histObj = { text: div.textContent, isDate: true, correctDay: S.currentDay, answered: false };
-            S.sessionSeq.push(histObj);
-            S.histView.unshift(histObj);
-            updateHistoryStrip();
-            updateStatus();
-
-            if (S.sound) speakDate(date);
-
-            return date;
-        }
-
-        function onDaySelect(selectedIdx, btnElement) {
-            if (S.dateAnswered) return;
-            // если кнопка уже заблокирована (была нажата ранее) - игнорируем
-            if (btnElement.classList.contains('disabled')) return;
-
-            const correct = (selectedIdx === S.currentDay);
-            if (correct) {
-                // Правильный ответ
-                S.dateAnswered = true;
-                S.correctCount++;
-                // Если это первая попытка - увеличиваем серию, иначе сбрасываем
-                if (S.attempts === 0) {
-                    S.streak++;
-                    if (S.streak > S.maxStreak) S.maxStreak = S.streak;
-                    showStreakEffect();
-                } else {
-                    S.streak = 0; // была ошибка - серия сбрасывается
-                }
-                document.body.classList.add('flash-correct');
-                setTimeout(() => document.body.classList.remove('flash-correct'), 300);
-
-                // Подсвечиваем все кнопки: правильную зелёным, остальные серым
-                const allBtns = document.querySelectorAll('.day-btn');
-                allBtns.forEach((b, i) => {
-                    b.classList.add('disabled');
-                    if (i === S.currentDay) b.classList.add('correct');
-                });
-                // Отмечаем историю как отвеченную
-                const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
-                if (lastHist && lastHist.isDate) lastHist.answered = true;
-                updateHistoryStrip();
-                updateStatus();
-
-                if (S.auto) {
-                    setTimeout(() => {
-                        document.getElementById('dayButtons').style.display = 'none';
-                        window.generate();
-                    }, 1500);
-                }
-                // в ручном режиме - клик по экрану повторит дату или переключит
-                return;
-            } else {
-                // Неправильный ответ
-                S.attempts++;
-                // блокируем эту кнопку (красным)
-                btnElement.classList.add('disabled', 'wrong');
-                S.wrongButtons.push(selectedIdx);
-
-                if (S.attempts >= 2) {
-                    // Вторая ошибка - показываем правильный ответ, засчитываем как неправильно
-                    S.dateAnswered = true;
-                    S.streak = 0;
-                    document.body.classList.add('flash-wrong');
-                    setTimeout(() => document.body.classList.remove('flash-wrong'), 300);
-
-                    const allBtns = document.querySelectorAll('.day-btn');
-                    allBtns.forEach((b, i) => {
-                        b.classList.add('disabled');
-                        if (i === S.currentDay) b.classList.add('correct');
-                    });
-                    const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
-                    if (lastHist && lastHist.isDate) lastHist.answered = true;
-                    updateHistoryStrip();
-                    updateStatus();
-
-                    if (S.auto) {
-                        setTimeout(() => {
-                            document.getElementById('dayButtons').style.display = 'none';
-                            window.generate();
-                        }, 1500);
-                    }
-                } else {
-                    // Первая ошибка - разрешаем выбрать другую кнопку
-                    // Ничего не делаем, просто подсветили неправильную
-                    vibrate('short');
                 }
             }
+            for (let i=S.dateDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[S.dateDeck[i],S.dateDeck[j]]=[S.dateDeck[j],S.dateDeck[i]];}
         }
-
-        function showStreakEffect() {
-            const el = document.createElement('div');
-            el.className = 'streak-effect';
-            el.textContent = '🔥';
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1000);
+        if (S.dateDeck.length === 0) { finishSequence(); return null; }
+        date = S.dateDeck.pop();
+    } else {
+        while (attempts < 1000) {
+            let y = yF + Math.floor(Math.random()*(yT-yF+1));
+            let m = mF + Math.floor(Math.random()*(mT-mF+1));
+            let maxD = new Date(Date.UTC(y,m,0)).getUTCDate();
+            let dMin=dF, dMax=Math.min(dT,maxD);
+            if (dMin>dMax){attempts++;continue;}
+            let d = dMin + Math.floor(Math.random()*(dMax-dMin+1));
+            date = new Date(Date.UTC(y,m-1,d));
+            if (date.getUTCMonth()===m-1 && date.getUTCFullYear()===y && date.getUTCDate()===d){isValid=true;break;}
+            attempts++;
         }
+        if (!isValid){finishSequence();return null;}
+    }
 
-        function repeatDate() {
-            if (S.currentDate) {
-                speakDate(S.currentDate);
-                vibrate('short');
-            }
-        }
+    S.currentDate = date;
+    // ИСПРАВЛЕН БАГ: getUTCDay() → 0=воскресенье, наш DAYS[0]='Вс' ✓
+    S.currentDay  = date.getUTCDay();
+    S.totalCount++;
+    S.dateAnswered = false; S.attempts = 0; S.wrongButtons = [];
 
-        function skipDate() {
-            if (S.dateAnswered) return;
-            S.dateAnswered = true;
-            S.streak = 0;
-            // Показываем правильный ответ
-            const allBtns = document.querySelectorAll('.day-btn');
-            allBtns.forEach((b, i) => {
+    UI.container.innerHTML = '';
+    let div = document.createElement('div');
+    div.className = 'num-item fade-in';
+    if (S.dateWords) {
+        div.classList.add('date-word');
+        div.innerHTML = `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]}<br>${date.getUTCFullYear()}`;
+    } else {
+        div.textContent = `${String(date.getUTCDate()).padStart(2,'0')}.${String(date.getUTCMonth()+1).padStart(2,'0')}.${date.getUTCFullYear()}`;
+    }
+    UI.container.appendChild(div);
+
+    // Day buttons
+    const dayContainer = document.getElementById('dayBtnContainer');
+    dayContainer.innerHTML = '';
+    document.getElementById('daySection').style.display = 'flex';
+    DAYS.forEach((name, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'day-btn'; btn.textContent = name; btn.dataset.idx = idx;
+        btn.onclick = function() { onDaySelect(idx, this); };
+        dayContainer.appendChild(btn);
+    });
+
+    UI.btnReplay.style.display = 'none';
+    UI.btnVerify.classList.remove('visible');
+
+    let histObj = { text: div.textContent.replace('<br>',''), isDate:true, correctDay:S.currentDay, answered:false };
+    S.sessionSeq.push(histObj); S.histView.unshift(histObj);
+    updateHistoryStrip(); updateStatus(); updateProgress();
+    if (S.sound) speakDate(date);
+    return date;
+}
+
+function onDaySelect(selectedIdx, btnElement) {
+    if (S.dateAnswered) return;
+    if (btnElement.classList.contains('disabled')) return;
+    const maxTries = S.prefs.date3tries ? 3 : 2;
+    const correct = (selectedIdx === S.currentDay);
+
+    if (correct) {
+        S.dateAnswered = true; S.correctCount++;
+        if (S.attempts === 0) {
+            S.streak++; if (S.streak > S.maxStreak) S.maxStreak = S.streak;
+            showStreakEffect(S.streak);
+        } else { S.streak = 0; }
+        document.body.classList.add('flash-correct');
+        setTimeout(()=>document.body.classList.remove('flash-correct'),300);
+        document.querySelectorAll('.day-btn').forEach((b,i) => {
+            b.classList.add('disabled');
+            if (i === S.currentDay) b.classList.add('correct');
+        });
+        const lh = S.sessionSeq[S.sessionSeq.length-1];
+        if (lh && lh.isDate) lh.answered = true;
+        updateHistoryStrip(); updateStatus();
+        if (S.auto) setTimeout(()=>{ document.getElementById('daySection').style.display='none'; window.generate(); }, 1400);
+    } else {
+        S.attempts++;
+        btnElement.classList.add('disabled','wrong');
+        S.wrongButtons.push(selectedIdx);
+        if (S.attempts >= maxTries - 1) {
+            S.dateAnswered = true; S.streak = 0;
+            document.body.classList.add('flash-wrong');
+            setTimeout(()=>document.body.classList.remove('flash-wrong'),300);
+            document.querySelectorAll('.day-btn').forEach((b,i) => {
                 b.classList.add('disabled');
                 if (i === S.currentDay) b.classList.add('correct');
             });
-            const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
-            if (lastHist && lastHist.isDate) lastHist.answered = true;
-            updateHistoryStrip();
-            updateStatus();
-            setTimeout(() => {
-                document.getElementById('dayButtons').style.display = 'none';
-                window.generate();
-            }, 500);
-        }
+            const lh = S.sessionSeq[S.sessionSeq.length-1];
+            if (lh && lh.isDate) lh.answered = false;
+            updateHistoryStrip(); updateStatus();
+            if (S.auto) setTimeout(()=>{ document.getElementById('daySection').style.display='none'; window.generate(); }, 1400);
+        } else { vibrate('short'); }
+    }
+}
 
-        function resetToStart() {
-            if (S.auto) window.toggleAuto();
-            stopAudio();
-            S.started = false; S.sessionSeq = []; S.histView = []; S.timeStart = null; S.timeEnd = null;
-            S.currentDate = null; S.currentDay = null; S.correctCount = 0; S.totalCount = 0;
-            S.dateAnswered = false; S.dateDeck = []; S.streak = 0; S.maxStreak = 0;
-            S.attempts = 0; S.wrongButtons = [];
-            document.getElementById('dayButtons').style.display = 'none';
-            UI.history.innerHTML = ''; 
-            UI.container.innerHTML = '<div class="num-item start-text fade-in">СТАРТ</div>';
-            UI.btnReplay.style.display = 'none';
-            updateStatus(); checkVerifyVisibility();
-        }
+function showStreakEffect(n) {
+    const el = document.createElement('div');
+    el.className = 'streak-effect'; el.textContent = n >= 10 ? '🔥🔥' : '🔥';
+    document.body.appendChild(el);
+    if (n >= 5) {
+        const lb = document.createElement('div');
+        lb.className = 'streak-label'; lb.textContent = `×${n}`;
+        document.body.appendChild(lb);
+        setTimeout(()=>lb.remove(), 950);
+    }
+    setTimeout(()=>el.remove(), 950);
+}
 
-        window.generate = function() {
-            if (!S.started) { 
-                S.started = true; S.timeStart = Date.now();
-                if (S.unique && S.mode !== 'phones' && S.mode !== 'dates') buildDeck(); 
-                checkVerifyVisibility(); 
-                UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) ? 'flex' : 'none';
-            }
+window.repeatDate = function() { if (S.currentDate) { speakDate(S.currentDate); vibrate('short'); } };
+window.skipDate   = function() {
+    if (S.dateAnswered) return;
+    S.dateAnswered = true; S.streak = 0;
+    document.querySelectorAll('.day-btn').forEach((b,i) => {
+        b.classList.add('disabled');
+        if (i === S.currentDay) b.classList.add('correct');
+    });
+    const lh = S.sessionSeq[S.sessionSeq.length-1];
+    if (lh && lh.isDate) lh.answered = false;
+    updateHistoryStrip(); updateStatus();
+    setTimeout(()=>{ document.getElementById('daySection').style.display='none'; window.generate(); }, 600);
+};
 
-            if (S.mode === 'phones') {
-                let phone = generatePhone();
-                drawPhone(phone);
-                return;
-            }
+// ═══ PI MODE ═══
+function generatePi() {
+    const pos    = S.piPos;
+    const chunk  = S.piChunk;
+    const digits = PI_DIGITS.slice(pos, pos + chunk);
+    if (!digits) { finishSequence(); return; }
 
-            if (S.mode === 'dates') {
-                if (!S.auto && S.currentDate && !S.dateAnswered) {
-                    return;
-                }
-                generateDate();
-                return;
-            }
+    S.piAnswered = false;
 
-            let chunkItems = [];
-            for(let i=0; i<S.prefs.chunkSize; i++) {
-                if (S.unique) {
-                    if (S.deck.length === 0) break;
-                    chunkItems.push(S.deck.pop());
-                } else {
-                    if (S.mode === 'numbers') {
-                        let min = parseInt(document.getElementById('inpMin').value) || 0;
-                        let max = parseInt(document.getElementById('inpMax').value) || 99;
-                        chunkItems.push(Math.floor(Math.random() * (Math.max(max, min) - Math.min(max, min) + 1)) + Math.min(max, min));
-                    } else {
-                        if(S.deck.length===0) buildDeck();
-                        chunkItems.push(S.deck[Math.floor(Math.random() * S.deck.length)]);
-                    }
-                }
-            }
+    UI.container.innerHTML = '';
+    const wrap = document.createElement('div'); wrap.className = 'fade-in'; wrap.style.textAlign='center';
 
-            if(chunkItems.length === 0) { finishSequence(); return; }
-            drawItems(chunkItems);
-        }
+    if (S.piInputMode) {
+        // Show context: prev digits dimmed, then blanks for current
+        const ctxStart = Math.max(0, pos - 5);
+        const ctx = PI_DIGITS.slice(ctxStart, pos);
+        const piDiv = document.createElement('div');
+        piDiv.className = 'pi-display';
+        piDiv.innerHTML = `<span style="opacity:0.25;font-size:0.6em">${pos===0?'3.':''}${ctx}</span><span id="piBlank" style="color:var(--accent);letter-spacing:2px">${'_'.repeat(digits.length)}</span>`;
+        wrap.appendChild(piDiv);
+        const posDiv = document.createElement('div');
+        posDiv.className = 'pi-position';
+        posDiv.textContent = `позиция ${pos+1}–${pos+chunk}`;
+        wrap.appendChild(posDiv);
+        UI.container.appendChild(wrap);
 
-        function drawPhone(phone) {
-            UI.container.innerHTML = '';
-            let histObj = { raw: phone.formatted, text: phone.formatted, isPhone: true, customText: '' };
-            let div = document.createElement('div');
-            div.className = `num-item phone fade-in`;
-            div.textContent = phone.formatted;
-            UI.container.appendChild(div);
-            S.sessionSeq.push(histObj);
-            S.histView.unshift(histObj);
-            updateHistoryStrip();
-            vibrate('short');
-            playAudioSequence(phone.audioChunks);
-            updateStatus();
-        }
-
-        function drawItems(items) {
-            UI.container.innerHTML = '';
-            let row = document.createElement('div'); row.className = 'chunks-row';
-            let speakArr = [];
-            items.forEach(item => {
-                let histObj = { raw: item, text: '', isRed: false, isCard: S.mode === 'cards', customText: '' };
-                if (S.mode === 'numbers') {
-                    let max = parseInt(document.getElementById('inpMax').value) || 99;
-                    const txt = item.toString().padStart(max > 99 ? 3 : 2, '0');
-                    histObj.text = txt; histObj.customText = S.customMap[txt] || '';
-                    speakArr.push({text: txt, isCard: false, num: item});
-                    let div = document.createElement('div');
-                    div.className = `num-item fade-in ${S.prefs.chunkSize > 1 || txt.length > 2 ? 'small' : ''}`;
-                    div.textContent = txt; row.appendChild(div);
-                } else {
-                    histObj.text = `${VALS[item[0]]}${SUITS[item[1]]}`;
-                    histObj.isRed = ['H','D'].includes(item[1]);
-                    let mapKey = item[0] === '0' ? '10'+item[1] : item;
-                    histObj.customText = S.customMap[mapKey] || S.customMap[item[0]] || ''; 
-                    speakArr.push({text: item, isCard: true});
-                    let img = document.createElement('img');
-                    img.className = 'card-item fade-in';
-                    img.src = `https://deckofcardsapi.com/static/img/${item}.png`;
-                    if(S.prefs.chunkSize === 3) img.style.maxWidth = '25vw';
-                    row.appendChild(img);
-                }
-                S.sessionSeq.push(histObj);
-                S.histView.unshift(histObj);
-            });
-            UI.container.appendChild(row);
-            updateHistoryStrip();
-            vibrate('short');
-            playAudioSequence(speakArr);
-            updateStatus();
-        }
-
-        function updateHistoryStrip() {
-            if (S.histView.length > (S.mode === 'phones' ? 4 : 7)) S.histView.pop();
-            UI.history.innerHTML = '';
-            S.histView.forEach((h, i) => {
-                let el = document.createElement('div');
-                el.className = 'hist-item' + (h.isRed ? ' red' : '') + (h.isPhone ? ' phone' : '');
-                let label = h.text;
-                if (h.isDate && h.answered && h.correctDay !== undefined) {
-                    label += ' (' + DAYS[h.correctDay] + ')';
-                }
-                el.textContent = label;
-                if(i>0) { el.style.transform = `scale(${1 - i*0.1})`; el.style.opacity = 0.5 - i*0.1; }
-                UI.history.appendChild(el);
-            });
-        }
-
-        function finishSequence() {
-            if(S.auto) window.toggleAuto();
-            S.timeEnd = Date.now();
-            UI.container.innerHTML = '<div class="num-item start-text fade-in">ВСЁ</div>';
-            UI.btnReplay.style.display = 'none';
-            vibrate('long'); playAudioSequence([{text: "ВСЁ"}]); 
-            updateStatus(); checkVerifyVisibility(true);
-        }
-
-        // --- Управление ---
-        window.toggleMenu = function() {
-            UI.topBar.classList.toggle('visible');
-            if(UI.topBar.classList.contains('visible')) {
-                setTimeout(() => { if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') UI.topBar.classList.remove('visible'); }, 5000);
-            }
-        }
-
-        window.toggleMode = function() {
-            if (S.mode === 'numbers') S.mode = 'cards';
-            else if (S.mode === 'cards') S.mode = 'phones';
-            else if (S.mode === 'phones') S.mode = 'dates';
-            else S.mode = 'numbers';
-
-            let iconText = S.mode === 'cards' ? '🃏' : (S.mode === 'phones' ? '📱' : (S.mode === 'dates' ? '📅' : '🔢'));
-            UI.icons.mode.textContent = iconText;
-            UI.icons.mode.classList.toggle('active', S.mode !== 'numbers');
-            
-            UI.blocks.num.style.display = S.mode === 'numbers' ? 'block' : 'none';
-            UI.blocks.card.style.display = S.mode === 'cards' ? 'block' : 'none';
-            UI.blocks.phone.style.display = S.mode === 'phones' ? 'block' : 'none';
-            document.getElementById('setDates').style.display = S.mode === 'dates' ? 'block' : 'none';
-            UI.blocks.customImg.style.display = (S.mode === 'phones' || S.mode === 'dates') ? 'none' : 'block';
-            UI.blocks.chunkRow.style.display = (S.mode === 'phones' || S.mode === 'dates') ? 'none' : 'flex';
-            
-            if (S.mode === 'phones' || S.mode === 'dates') {
-                UI.btnUnique.style.opacity = '0.3';
-                UI.btnUnique.style.pointerEvents = 'none';
-                if (S.unique) window.toggleUnique();
-            } else {
-                UI.btnUnique.style.opacity = '1';
-                UI.btnUnique.style.pointerEvents = 'auto';
-                if (S.mode === 'cards' && !S.unique) window.toggleUnique();
-            }
-            resetToStart();
-        }
-
-        window.toggleUnique = function() {
-            if(S.mode === 'phones' || S.mode === 'dates') return;
-            S.unique = !S.unique;
-            UI.icons.unq.textContent = S.unique ? '🔀' : '♾️';
-            UI.icons.unq.classList.toggle('active', S.unique);
-            resetToStart();
-        }
-
-        window.toggleSound = function() {
-            S.sound = !S.sound;
-            UI.icons.snd.textContent = S.sound ? '🔊' : '🔇';
-            UI.icons.snd.classList.toggle('active', S.sound);
-            if(S.sound && S.voices.length === 0 && 'speechSynthesis' in window) window.speechSynthesis.getVoices();
-        }
-
-        window.toggleAuto = function() {
-            if (S.auto) {
-                clearInterval(S.auto); S.auto = null;
-                UI.icons.auto.textContent = "▶️"; UI.icons.auto.classList.remove('active');
-            } else {
-                if (!S.started && S.unique && S.deck.length===0 && S.mode !== 'phones' && S.mode !== 'dates') buildDeck();
-                window.generate();
-                const ms = parseFloat(document.getElementById('inpTimer').value) * 1000;
-                S.auto = setInterval(window.generate, ms);
-                UI.icons.auto.textContent = "⏸️"; UI.icons.auto.classList.add('active');
-            }
-            updateStatus();
-        }
-
-        window.handleStageClick = function() {
-            if (UI.topBar.classList.contains('visible')) { UI.topBar.classList.remove('visible'); return; }
-            if (S.mode === 'dates' && S.dateAnswered && S.currentDate) {
-                repeatDate();
-                return;
-            }
-            if (S.mode === 'dates' && S.currentDate && !S.dateAnswered) {
-                return;
-            }
-            if (S.auto) window.toggleAuto(); else window.generate();
-        }
-
-        window.openSettings = function() { UI.modals.set.classList.add('open'); if(S.auto) window.toggleAuto(); }
-        window.closeSettings = function() { 
-            UI.modals.set.classList.remove('open'); 
-            S.dateDeck = [];
-            readPreferences(); resetToStart(); 
-        }
-
-        // --- Модалка Проверки ---
-        window.openRecall = function() {
-            if(S.auto) window.toggleAuto();
-            let timeText = "";
-            if(S.prefs.timer && S.timeStart) {
-                let end = S.timeEnd || Date.now();
-                let sec = Math.floor((end - S.timeStart) / 1000);
-                let m = Math.floor(sec/60); let s = sec%60;
-                timeText = `⏱ Время: ${m > 0 ? m+' м ' : ''}${s} с`;
-            }
-            document.getElementById('recallTimerBox').textContent = timeText;
-
-            const grid = document.getElementById('recallGrid'); grid.innerHTML = '';
-            if (S.mode === 'phones') grid.classList.add('phones'); else grid.classList.remove('phones');
-
-            const isDates = S.mode === 'dates';
-
-            S.sessionSeq.forEach((item, index) => {
-                let wrap = document.createElement('div'); wrap.className = 'recall-cell-wrapper';
-                const cell = document.createElement('div');
-                cell.className = 'recall-cell';
-                cell.textContent = item.text;
-                if (item.isRed) cell.dataset.red = "true";
-                if (item.correctDay !== undefined) cell.dataset.correctDay = item.correctDay;
-                cell.onclick = function() { this.classList.add('revealed'); if (this.dataset.red) this.classList.add('red'); };
-                wrap.appendChild(cell);
-
-                if (item.customText) {
-                    let lbl = document.createElement('div'); lbl.className = 'custom-image-label';
-                    lbl.textContent = item.customText; wrap.appendChild(lbl);
-                }
-
-                if (isDates) {
-                    const select = document.createElement('select');
-                    select.className = 'recall-day-select';
-                    select.dataset.index = index;
-                    const opt0 = document.createElement('option'); opt0.value = ''; opt0.textContent = '—';
-                    select.appendChild(opt0);
-                    DAYS.forEach((name, idx) => {
-                        const opt = document.createElement('option'); opt.value = idx; opt.textContent = name;
-                        select.appendChild(opt);
-                    });
-                    wrap.appendChild(select);
-                }
-
-                grid.appendChild(wrap);
-            });
-            UI.modals.rec.classList.add('open');
-        }
-
-        window.closeRecall = function() { UI.modals.rec.classList.remove('open'); }
-        window.revealAll = function() {
-            document.querySelectorAll('.recall-cell').forEach(c => {
-                c.classList.add('revealed');
-                if (c.dataset.red) c.classList.add('red');
-                const wrapper = c.parentElement;
-                const select = wrapper.querySelector('.recall-day-select');
-                if (select) {
-                    const correctDay = c.dataset.correctDay;
-                    if (correctDay !== undefined) {
-                        select.value = correctDay;
-                        select.style.borderColor = '#4caf50';
-                        select.style.backgroundColor = '#1e3a1e';
-                        select.disabled = true;
-                    }
-                }
-            });
-        }
-
-        window.exportData = function() {
-            let typeName = S.mode === 'numbers' ? 'Числа' : (S.mode === 'cards' ? 'Карты' : (S.mode === 'dates' ? 'Даты' : 'Телефоны'));
-            let str = `## Тренировка (${typeName})\n`;
-            if(S.prefs.timer && S.timeStart) {
-                let sec = Math.floor(((S.timeEnd || Date.now()) - S.timeStart) / 1000);
-                str += `⏱ Время: ${sec} сек.\n`;
-            }
-            if (S.mode === 'dates') {
-                str += `Правильных: ${S.correctCount} из ${S.totalCount}\n`;
-                str += `Макс. серия: ${S.maxStreak}\n`;
-            }
-            str += `\n**Последовательность (${S.sessionSeq.length}):**\n`;
-            str += S.sessionSeq.map(i => {
-                let base = i.text;
-                if (i.isDate && i.correctDay !== undefined) base += ` (${DAYS[i.correctDay]})`;
-                if (i.customText) base += `(${i.customText})`;
-                return base;
-            }).join(S.mode === 'phones' ? '\n' : ' - ');
-            try { navigator.clipboard.writeText(str).then(() => alert("Скопировано!")); } catch(e) {}
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if(e.code === 'Space') { e.preventDefault(); window.handleStageClick(); }
-            if(e.code === 'KeyA') window.toggleAuto();
+        // Build digit buttons
+        const piSection = document.getElementById('piSection');
+        piSection.style.display = 'flex';
+        const bRow = document.getElementById('piDigitBtns');
+        bRow.innerHTML = '';
+        // Shuffled digits 0-9
+        const digs = Array.from({length:10},(_,i)=>i).sort(()=>Math.random()-0.5);
+        digs.forEach(d => {
+            const b = document.createElement('button');
+            b.className = 'pi-digit-btn'; b.textContent = d;
+            b.onclick = () => onPiDigit(d, b, digits);
+            bRow.appendChild(b);
         });
+        S._piExpected = digits; S._piProgress = '';
+    } else {
+        // Reveal mode: just show the digits
+        const piDiv = document.createElement('div');
+        piDiv.className = 'pi-display';
+        let html = '';
+        for (let i=0; i<digits.length; i++) {
+            html += `<span class="pi-char">${digits[i]}</span>`;
+        }
+        piDiv.innerHTML = html;
+        wrap.appendChild(piDiv);
+        const posDiv = document.createElement('div');
+        posDiv.className = 'pi-position';
+        posDiv.textContent = `позиция ${pos+1}–${pos+chunk}`;
+        wrap.appendChild(posDiv);
+        UI.container.appendChild(wrap);
+        S.piPos += chunk;
+        S.piAnswered = true;
+    }
 
-        readPreferences(); 
-    </script>
+    const histObj = { text: digits, isPi: true };
+    S.sessionSeq.push(histObj); S.histView.unshift(histObj);
+    updateHistoryStrip(); updateStatus(); updateProgress();
+}
+
+function onPiDigit(digit, btn, expected) {
+    if (S.piAnswered) return;
+    const pos = S._piProgress.length;
+    if (digit === parseInt(expected[pos])) {
+        S._piProgress += digit;
+        // update blank display
+        const blank = document.getElementById('piBlank');
+        if (blank) blank.textContent = S._piProgress + '_'.repeat(expected.length - S._piProgress.length);
+        btn.classList.add('correct');
+        setTimeout(()=>btn.classList.remove('correct'), 400);
+        vibrate('short');
+        if (S._piProgress.length === expected.length) {
+            // All correct!
+            S.piAnswered = true;
+            S.piPos += expected.length;
+            S.piStreak += expected.length;
+            if (S.piStreak > S.piMaxStreak) S.piMaxStreak = S.piStreak;
+            const rec = parseInt(localStorage.getItem('mz9_pi_record')||'0');
+            if (S.piStreak > rec) {
+                localStorage.setItem('mz9_pi_record', S.piStreak);
+                document.getElementById('piRecord').textContent = S.piStreak;
+            }
+            document.body.classList.add('flash-correct');
+            setTimeout(()=>document.body.classList.remove('flash-correct'),250);
+            showStreakEffect(Math.floor(S.piStreak/10));
+            updateStatus();
+            if (S.auto) setTimeout(window.generate, 800);
+        }
+    } else {
+        S.piStreak = 0;
+        btn.classList.add('wrong');
+        setTimeout(()=>btn.classList.remove('wrong'), 400);
+        vibrate('short');
+    }
+}
+
+// ═══ MAIN GENERATE ═══
+window.generate = function() {
+    if (!S.started) {
+        S.started = true; S.timeStart = Date.now();
+        if (S.unique && S.mode !== 'phones' && S.mode !== 'dates' && S.mode !== 'pi') buildDeck();
+        checkVerifyVisibility();
+        UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) ? 'flex' : 'none';
+    }
+
+    document.getElementById('daySection').style.display = 'none';
+    document.getElementById('piSection').style.display  = 'none';
+
+    if (S.mode === 'phones') { drawPhone(generatePhone()); return; }
+    if (S.mode === 'dates')  { generateDate(); return; }
+    if (S.mode === 'pi')     { generatePi();   return; }
+
+    let chunkItems = [];
+    for (let i=0; i<S.prefs.chunkSize; i++) {
+        if (S.unique) {
+            if (S.deck.length === 0) break;
+            chunkItems.push(S.deck.pop());
+        } else {
+            if (S.mode === 'numbers') {
+                let min = parseInt(document.getElementById('inpMin').value)||0;
+                let max = parseInt(document.getElementById('inpMax').value)||99;
+                chunkItems.push(Math.floor(Math.random()*(Math.max(max,min)-Math.min(max,min)+1))+Math.min(max,min));
+            } else {
+                if (S.deck.length===0) buildDeck();
+                chunkItems.push(S.deck[Math.floor(Math.random()*S.deck.length)]);
+            }
+        }
+    }
+    if (chunkItems.length === 0) { finishSequence(); return; }
+    drawItems(chunkItems);
+};
+
+function drawPhone(phone) {
+    UI.container.innerHTML = '';
+    let div = document.createElement('div');
+    div.className = 'num-item phone fade-in';
+    div.textContent = phone.formatted;
+    UI.container.appendChild(div);
+    const histObj = { raw:phone.formatted, text:phone.formatted, isPhone:true, customText:'' };
+    S.sessionSeq.push(histObj); S.histView.unshift(histObj);
+    updateHistoryStrip(); vibrate('short'); playAudioSequence(phone.audioChunks); updateStatus(); updateProgress();
+}
+
+function drawItems(items) {
+    UI.container.innerHTML = '';
+    let row = document.createElement('div'); row.className = 'chunks-row';
+    let speakArr = [];
+    items.forEach(item => {
+        let histObj = { raw:item, text:'', isRed:false, isCard:S.mode==='cards', customText:'' };
+        if (S.mode === 'numbers') {
+            let max = parseInt(document.getElementById('inpMax').value)||99;
+            const txt = item.toString().padStart(max>99?3:2,'0');
+            histObj.text = txt; histObj.customText = S.customMap[txt]||'';
+            speakArr.push({text:txt,isCard:false,num:item});
+            let div = document.createElement('div');
+            div.className = `num-item fade-in${S.prefs.chunkSize>1||txt.length>2?' small':''}`;
+            div.textContent = txt; row.appendChild(div);
+        } else {
+            histObj.text = `${VALS[item[0]]}${SUITS[item[1]]}`;
+            histObj.isRed = ['H','D'].includes(item[1]);
+            let mapKey = item[0]==='0'?'10'+item[1]:item;
+            histObj.customText = S.customMap[mapKey]||S.customMap[item[0]]||'';
+            speakArr.push({text:item,isCard:true});
+            let img = document.createElement('img');
+            img.className = 'card-item fade-in';
+            img.src = `https://deckofcardsapi.com/static/img/${item}.png`;
+            if (S.prefs.chunkSize===3) img.style.maxWidth='23vw';
+            row.appendChild(img);
+        }
+        S.sessionSeq.push(histObj); S.histView.unshift(histObj);
+    });
+    UI.container.appendChild(row);
+    updateHistoryStrip(); vibrate('short'); playAudioSequence(speakArr); updateStatus(); updateProgress();
+}
+
+function updateHistoryStrip() {
+    const maxH = S.mode==='phones'?4:7;
+    if (S.histView.length > maxH) S.histView.pop();
+    UI.history.innerHTML = '';
+    S.histView.forEach((h,i) => {
+        let el = document.createElement('div');
+        let cls = 'hist-item';
+        if (h.isRed) cls += ' red';
+        if (h.isPhone) cls += ' phone';
+        if (h.isDate && h.answered === true) cls += ' answered';
+        el.className = cls;
+        let label = h.text;
+        if (h.isDate && h.answered && h.correctDay !== undefined) label += `(${DAYS[h.correctDay]})`;
+        el.textContent = label;
+        if (i > 0) { el.style.transform=`scale(${1-i*0.1})`; el.style.opacity=`${0.5-i*0.1}`; }
+        UI.history.appendChild(el);
+    });
+}
+
+function finishSequence() {
+    if (S.auto) window.toggleAuto();
+    S.timeEnd = Date.now();
+    recordSession();
+    document.getElementById('daySection').style.display='none';
+    document.getElementById('piSection').style.display='none';
+    UI.container.innerHTML = '<div class="num-item start-text fade-in">ВСЁ ✓</div>';
+    UI.btnReplay.style.display = 'none';
+    vibrate('long'); playAudioSequence([{text:'ВСЁ'}]);
+    updateStatus(); checkVerifyVisibility(true); updateProgress();
+}
+
+function resetToStart() {
+    if (S.auto) window.toggleAuto();
+    stopAudio();
+    S.started=false; S.sessionSeq=[]; S.histView=[]; S.timeStart=null; S.timeEnd=null;
+    S.currentDate=null; S.currentDay=null; S.correctCount=0; S.totalCount=0;
+    S.dateAnswered=false; S.dateDeck=[]; S.streak=0; S.maxStreak=0;
+    S.attempts=0; S.wrongButtons=[];
+    S.piPos=parseInt(document.getElementById('inpPiStart').value)||0;
+    S.piStreak=0; S.piMaxStreak=0; S.piAnswered=false;
+    document.getElementById('daySection').style.display='none';
+    document.getElementById('piSection').style.display='none';
+    UI.history.innerHTML='';
+    UI.progress.style.width='0%';
+    UI.container.innerHTML='<div class="num-item start-text fade-in">СТАРТ</div>';
+    UI.btnReplay.style.display='none';
+    updateStatus(); checkVerifyVisibility();
+}
+
+// ═══ UI EVENTS ═══
+window.toggleMenu = function() {
+    UI.topBar.classList.toggle('visible');
+    if (UI.topBar.classList.contains('visible')) {
+        setTimeout(()=>{ if(document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA') UI.topBar.classList.remove('visible'); }, 5000);
+    }
+};
+
+window.handleStageClick = function() {
+    if (UI.topBar.classList.contains('visible')) { UI.topBar.classList.remove('visible'); return; }
+    if (S.mode === 'dates' && S.currentDate && !S.dateAnswered) return;
+    if (S.mode === 'dates' && S.dateAnswered) { document.getElementById('daySection').style.display='none'; window.generate(); return; }
+    if (S.mode === 'pi' && !S.piAnswered) return;
+    if (S.auto) window.toggleAuto(); else window.generate();
+};
+
+window.openSettings = function() {
+    if (S.auto) window.toggleAuto();
+    UI.modals.set.classList.add('open');
+};
+window.closeSettings = function() {
+    UI.modals.set.classList.remove('open');
+    S.dateDeck=[];
+    S.piPos=parseInt(document.getElementById('inpPiStart').value)||0;
+    readPreferences(); saveState(); resetToStart();
+};
+
+window.openRecall = function() {
+    if (S.auto) window.toggleAuto();
+    let timeText = '';
+    if (S.prefs.timer && S.timeStart) {
+        let sec = Math.floor(((S.timeEnd||Date.now())-S.timeStart)/1000);
+        let m=Math.floor(sec/60), s=sec%60;
+        timeText = `⏱ ${m>0?m+' м ':''} ${s} с`;
+    }
+    document.getElementById('recallTimerBox').textContent = timeText;
+
+    // Stats row for dates
+    const statsEl = document.getElementById('recallStats');
+    statsEl.innerHTML = '';
+    if (S.mode === 'dates' && S.totalCount > 0) {
+        const acc = Math.round(S.correctCount/S.totalCount*100);
+        statsEl.innerHTML = `
+            <div class="recall-stat"><div class="val">${S.correctCount}/${S.totalCount}</div><div class="key">ВЕРНО</div></div>
+            <div class="recall-stat"><div class="val">${acc}%</div><div class="key">ТОЧНОСТЬ</div></div>
+            <div class="recall-stat"><div class="val">${S.maxStreak}</div><div class="key">MAX СЕРИЯ</div></div>
+        `;
+    }
+
+    const grid = document.getElementById('recallGrid');
+    grid.innerHTML = '';
+    grid.className = 'recall-grid' + (S.mode==='phones'?' phones':'');
+
+    S.sessionSeq.forEach((item, index) => {
+        let wrap = document.createElement('div'); wrap.className = 'recall-cell-wrapper';
+        const cell = document.createElement('div'); cell.className = 'recall-cell';
+        cell.textContent = item.text;
+        if (item.isRed) cell.dataset.red = 'true';
+        if (item.correctDay !== undefined) cell.dataset.correctDay = item.correctDay;
+        cell.onclick = function() { this.classList.add('revealed'); if(this.dataset.red) this.classList.add('red'); };
+        wrap.appendChild(cell);
+        if (item.customText) {
+            let lbl = document.createElement('div'); lbl.className = 'custom-image-label';
+            lbl.textContent = item.customText; wrap.appendChild(lbl);
+        }
+        if (S.mode === 'dates') {
+            const sel = document.createElement('select'); sel.className = 'recall-day-select';
+            sel.dataset.index = index;
+            const o0 = document.createElement('option'); o0.value=''; o0.textContent='—'; sel.appendChild(o0);
+            DAYS.forEach((name,idx) => {
+                const opt = document.createElement('option'); opt.value=idx; opt.textContent=name; sel.appendChild(opt);
+            });
+            wrap.appendChild(sel);
+        }
+        grid.appendChild(wrap);
+    });
+    UI.modals.rec.classList.add('open');
+};
+window.closeRecall = function() { UI.modals.rec.classList.remove('open'); };
+window.revealAll = function() {
+    document.querySelectorAll('.recall-cell').forEach(c => {
+        c.classList.add('revealed');
+        if (c.dataset.red) c.classList.add('red');
+        const sel = c.parentElement.querySelector('.recall-day-select');
+        if (sel && c.dataset.correctDay !== undefined) {
+            sel.value = c.dataset.correctDay;
+            sel.style.borderColor = '#22c55e';
+            sel.style.backgroundColor = '#052e16';
+            sel.disabled = true;
+        }
+    });
+};
+
+window.exportData = function() {
+    const names = {numbers:'Числа',cards:'Карты',dates:'Даты',phones:'Телефоны',pi:'Число Пи'};
+    let str = `## Тренировка (${names[S.mode]||S.mode})\n`;
+    if (S.prefs.timer && S.timeStart) {
+        let sec = Math.floor(((S.timeEnd||Date.now())-S.timeStart)/1000);
+        str += `⏱ Время: ${sec} сек.\n`;
+    }
+    if (S.mode === 'dates') str += `Верно: ${S.correctCount}/${S.totalCount} | Серия: ${S.maxStreak}\n`;
+    if (S.mode === 'pi') str += `Дошёл до позиции: ${S.piPos} | Серия: ${S.piMaxStreak}\n`;
+    str += `\n**Последовательность (${S.sessionSeq.length}):**\n`;
+    str += S.sessionSeq.map(i => {
+        let base = i.text;
+        if (i.isDate && i.correctDay!==undefined) base += ` (${DAYS[i.correctDay]})`;
+        if (i.customText) base += ` [${i.customText}]`;
+        return base;
+    }).join(S.mode==='phones'?'\n':' — ');
+    try { navigator.clipboard.writeText(str).then(()=>alert('Скопировано!')); } catch(e) {}
+};
+
+// ═══ KEYBOARD ═══
+document.addEventListener('keydown', e => {
+    if (e.code==='Space') { e.preventDefault(); window.handleStageClick(); }
+    if (e.code==='KeyA') window.toggleAuto();
+    if (e.code==='Escape') {
+        document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open'));
+    }
+});
+
+// ═══ INIT ═══
+loadState();
+syncModeUI();
+readPreferences();
+</script>
 </body>
 </html>
