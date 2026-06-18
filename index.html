@@ -29,12 +29,10 @@
         body.phantom-mode { background: #000; }
         body.phantom-mode .main-stage, body.phantom-mode .history-strip, body.phantom-mode .status-pill { opacity: 0 !important; pointer-events: none; }
 
-        /* Вспышки */
         body.flash-correct { background: #1b5e20 !important; transition: background 0.1s; }
         body.flash-wrong { background: #b71c1c !important; transition: background 0.1s; }
         body.flash-correct .main-stage, body.flash-wrong .main-stage { transition: none; }
 
-        /* --- Шторка --- */
         .trigger-zone { position: absolute; top: 0; width: 100%; height: 70px; z-index: 90; }
         
         .top-bar {
@@ -66,7 +64,6 @@
         }
         .status-pill.visible { opacity: 1; }
 
-        /* --- Главный Экран --- */
         .main-stage {
             flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
             position: relative; z-index: 10; cursor: pointer; padding: 20px;
@@ -95,7 +92,6 @@
         .fade-in { animation: fadeIn 0.15s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Эффект цепочки (огонь) */
         .streak-effect {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: 6rem; z-index: 200; pointer-events: none;
@@ -107,7 +103,6 @@
             100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
         }
 
-        /* --- Кнопка Повтора (Replay) --- */
         .replay-btn {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
             color: white; font-size: 1rem; padding: 10px 20px; border-radius: 20px;
@@ -116,7 +111,6 @@
         }
         .replay-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
 
-        /* --- История --- */
         .history-strip {
             position: absolute; bottom: 85px; width: 100%; height: 60px;
             display: flex; justify-content: center; align-items: center; gap: 15px;
@@ -130,7 +124,6 @@
         .hist-item:first-child { font-size: 1.8rem; opacity: 1; color: var(--text); font-weight: bold; }
         .hist-item.phone:first-child { font-size: 1.3rem; }
 
-        /* --- Кнопка Проверки --- */
         .verify-btn {
             position: absolute; bottom: 25px;
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
@@ -143,7 +136,6 @@
         .verify-btn.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .verify-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
 
-        /* --- Модальные Окна --- */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); z-index: 1000; display: none; 
@@ -185,7 +177,6 @@
             width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; font-family: inherit;
         }
 
-        /* --- Сетка проверки --- */
         .recall-timer { text-align: center; color: var(--accent); font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
         .recall-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
@@ -212,7 +203,6 @@
         .action-row { display: flex; gap: 10px; margin-top: 20px; }
         .action-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #333; color: white; font-family: inherit; cursor: pointer; font-weight: bold;}
 
-        /* --- Даты: кнопки дней недели --- */
         .day-buttons {
             display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
             margin-top: 20px; width: 100%;
@@ -265,7 +255,6 @@
         <div class="items-container" id="displayContainer">
             <div class="num-item start-text fade-in">СТАРТ</div>
         </div>
-        <!-- Блок выбора дня недели для дат -->
         <div id="dayButtons" style="display:none; margin-top:20px; width:100%;">
             <div style="color:var(--text-dim); font-size:0.9rem; margin-bottom:10px;">Какой день недели?</div>
             <div class="day-buttons" id="dayBtnContainer"></div>
@@ -326,7 +315,6 @@
                 </div>
             </div>
 
-            <!-- Настройки дат -->
             <div class="setting-group" id="setDates" style="display:none;">
                 <h3>📅 Диапазон дат</h3>
                 <div class="flex-row">
@@ -443,7 +431,9 @@
             dateAnswered: false,
             streak: 0,
             maxStreak: 0,
-            dateWords: false
+            dateWords: false,
+            attempts: 0,          // количество попыток для текущей даты (0,1,2)
+            wrongButtons: []      // индексы уже нажатых неправильных кнопок
         };
 
         if ('speechSynthesis' in window) {
@@ -492,9 +482,9 @@
 
         function speakDate(date) {
             if (!S.sound) return;
-            let day = date.getDate();
-            let month = MONTHS[date.getMonth()];
-            let year = date.getFullYear();
+            let day = date.getUTCDate();
+            let month = MONTHS[date.getUTCMonth()];
+            let year = date.getUTCFullYear();
             speakText(`${day} ${month} ${year}`, 0.9);
         }
 
@@ -649,12 +639,12 @@
                     S.dateDeck = [];
                     for (let y = yFrom; y <= yTo; y++) {
                         for (let m = mFrom; m <= mTo; m++) {
-                            let daysInMonth = new Date(y, m, 0).getDate();
+                            let daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
                             let dStart = (m === mFrom && y === yFrom) ? dFrom : 1;
                             let dEnd = (m === mTo && y === yTo) ? Math.min(dTo, daysInMonth) : daysInMonth;
                             for (let d = dStart; d <= dEnd; d++) {
-                                let dt = new Date(y, m-1, d);
-                                if (dt.getMonth() === m-1 && dt.getFullYear() === y && dt.getDate() === d) S.dateDeck.push(dt);
+                                let dt = new Date(Date.UTC(y, m-1, d));
+                                if (dt.getUTCMonth() === m-1 && dt.getUTCFullYear() === y && dt.getUTCDate() === d) S.dateDeck.push(dt);
                             }
                         }
                     }
@@ -669,36 +659,39 @@
                 while (attempts < maxAttempts) {
                     let year = yFrom + Math.floor(Math.random() * (yTo - yFrom + 1));
                     let month = mFrom + Math.floor(Math.random() * (mTo - mFrom + 1));
-                    let maxDay = new Date(year, month, 0).getDate();
+                    let maxDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
                     let dayMin = (month === mFrom && year === yFrom) ? dFrom : 1;
                     let dayMax = (month === mTo && year === yTo) ? Math.min(dTo, maxDay) : maxDay;
                     if (dayMin > dayMax) { attempts++; continue; }
                     let day = dayMin + Math.floor(Math.random() * (dayMax - dayMin + 1));
-                    date = new Date(year, month-1, day);
-                    if (date.getMonth() === month-1 && date.getFullYear() === year && date.getDate() === day) { isValid = true; break; }
+                    date = new Date(Date.UTC(year, month-1, day));
+                    if (date.getUTCMonth() === month-1 && date.getUTCFullYear() === year && date.getUTCDate() === day) { isValid = true; break; }
                     attempts++;
                 }
                 if (!isValid) { finishSequence(); return null; }
             }
 
+            // Используем UTC для всех операций
             S.currentDate = date;
-            S.currentDay = date.getDay();
+            S.currentDay = date.getUTCDay(); // 0=воскресенье
             S.totalCount++;
             S.dateAnswered = false;
+            S.attempts = 0;
+            S.wrongButtons = [];
 
             UI.container.innerHTML = '';
             let div = document.createElement('div');
             div.className = 'num-item fade-in';
             if (S.dateWords) {
                 div.classList.add('date-word');
-                let day = date.getDate();
-                let month = MONTHS[date.getMonth()];
-                let year = date.getFullYear();
+                let day = date.getUTCDate();
+                let month = MONTHS[date.getUTCMonth()];
+                let year = date.getUTCFullYear();
                 div.textContent = `${day} ${month} ${year}`;
             } else {
-                let day = String(date.getDate()).padStart(2,'0');
-                let month = String(date.getMonth()+1).padStart(2,'0');
-                let year = date.getFullYear();
+                let day = String(date.getUTCDate()).padStart(2,'0');
+                let month = String(date.getUTCMonth()+1).padStart(2,'0');
+                let year = date.getUTCFullYear();
                 div.textContent = `${day}.${month}.${year}`;
             }
             UI.container.appendChild(div);
@@ -719,7 +712,6 @@
                 dayContainer.appendChild(btn);
             });
 
-            // Показываем кнопки управления всегда
             document.getElementById('btnRepeatDate').style.display = 'inline-block';
             document.getElementById('btnSkipDate').style.display = 'inline-block';
 
@@ -732,7 +724,6 @@
             updateHistoryStrip();
             updateStatus();
 
-            // Если звук включён – озвучиваем дату автоматически (опционально)
             if (S.sound) speakDate(date);
 
             return date;
@@ -740,43 +731,80 @@
 
         function onDaySelect(selectedIdx, btnElement) {
             if (S.dateAnswered) return;
-            S.dateAnswered = true;
+            // если кнопка уже заблокирована (была нажата ранее) - игнорируем
+            if (btnElement.classList.contains('disabled')) return;
+
             const correct = (selectedIdx === S.currentDay);
             if (correct) {
+                // Правильный ответ
+                S.dateAnswered = true;
                 S.correctCount++;
-                S.streak++;
-                if (S.streak > S.maxStreak) S.maxStreak = S.streak;
-                // эффект цепочки
-                showStreakEffect();
+                // Если это первая попытка - увеличиваем серию, иначе сбрасываем
+                if (S.attempts === 0) {
+                    S.streak++;
+                    if (S.streak > S.maxStreak) S.maxStreak = S.streak;
+                    showStreakEffect();
+                } else {
+                    S.streak = 0; // была ошибка - серия сбрасывается
+                }
                 document.body.classList.add('flash-correct');
                 setTimeout(() => document.body.classList.remove('flash-correct'), 300);
+
+                // Подсвечиваем все кнопки: правильную зелёным, остальные серым
+                const allBtns = document.querySelectorAll('.day-btn');
+                allBtns.forEach((b, i) => {
+                    b.classList.add('disabled');
+                    if (i === S.currentDay) b.classList.add('correct');
+                });
+                // Отмечаем историю как отвеченную
+                const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
+                if (lastHist && lastHist.isDate) lastHist.answered = true;
+                updateHistoryStrip();
+                updateStatus();
+
+                if (S.auto) {
+                    setTimeout(() => {
+                        document.getElementById('dayButtons').style.display = 'none';
+                        window.generate();
+                    }, 1500);
+                }
+                // в ручном режиме - клик по экрану повторит дату или переключит
+                return;
             } else {
-                S.streak = 0;
-                document.body.classList.add('flash-wrong');
-                setTimeout(() => document.body.classList.remove('flash-wrong'), 300);
-            }
+                // Неправильный ответ
+                S.attempts++;
+                // блокируем эту кнопку (красным)
+                btnElement.classList.add('disabled', 'wrong');
+                S.wrongButtons.push(selectedIdx);
 
-            // Обновляем историю – отмечаем, что ответ дан
-            const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
-            if (lastHist && lastHist.isDate) lastHist.answered = true;
-            updateHistoryStrip();
+                if (S.attempts >= 2) {
+                    // Вторая ошибка - показываем правильный ответ, засчитываем как неправильно
+                    S.dateAnswered = true;
+                    S.streak = 0;
+                    document.body.classList.add('flash-wrong');
+                    setTimeout(() => document.body.classList.remove('flash-wrong'), 300);
 
-            const allBtns = document.querySelectorAll('.day-btn');
-            allBtns.forEach((b, i) => {
-                b.classList.add('disabled');
-                if (i === S.currentDay) b.classList.add('correct');
-                else if (i === selectedIdx && !correct) b.classList.add('wrong');
-            });
+                    const allBtns = document.querySelectorAll('.day-btn');
+                    allBtns.forEach((b, i) => {
+                        b.classList.add('disabled');
+                        if (i === S.currentDay) b.classList.add('correct');
+                    });
+                    const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
+                    if (lastHist && lastHist.isDate) lastHist.answered = true;
+                    updateHistoryStrip();
+                    updateStatus();
 
-            updateStatus();
-
-            if (S.auto) {
-                setTimeout(() => {
-                    document.getElementById('dayButtons').style.display = 'none';
-                    window.generate();
-                }, 1500);
-            } else {
-                // В ручном режиме просто ждём следующего клика или кнопки скип/повтор
+                    if (S.auto) {
+                        setTimeout(() => {
+                            document.getElementById('dayButtons').style.display = 'none';
+                            window.generate();
+                        }, 1500);
+                    }
+                } else {
+                    // Первая ошибка - разрешаем выбрать другую кнопку
+                    // Ничего не делаем, просто подсветили неправильную
+                    vibrate('short');
+                }
             }
         }
 
@@ -796,21 +824,19 @@
         }
 
         function skipDate() {
-            if (S.dateAnswered) return; // уже ответили, скип не нужен
+            if (S.dateAnswered) return;
             S.dateAnswered = true;
-            S.streak = 0; // сбрасываем серию
-            // Засчитываем как неправильный (totalCount уже увеличен, correctCount не меняем)
-            // Обновляем историю
-            const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
-            if (lastHist && lastHist.isDate) lastHist.answered = true;
-            updateHistoryStrip();
-            // Показываем правильный ответ?
+            S.streak = 0;
+            // Показываем правильный ответ
             const allBtns = document.querySelectorAll('.day-btn');
             allBtns.forEach((b, i) => {
                 b.classList.add('disabled');
                 if (i === S.currentDay) b.classList.add('correct');
             });
-            // Небольшая задержка и переход
+            const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
+            if (lastHist && lastHist.isDate) lastHist.answered = true;
+            updateHistoryStrip();
+            updateStatus();
             setTimeout(() => {
                 document.getElementById('dayButtons').style.display = 'none';
                 window.generate();
@@ -823,6 +849,7 @@
             S.started = false; S.sessionSeq = []; S.histView = []; S.timeStart = null; S.timeEnd = null;
             S.currentDate = null; S.currentDay = null; S.correctCount = 0; S.totalCount = 0;
             S.dateAnswered = false; S.dateDeck = []; S.streak = 0; S.maxStreak = 0;
+            S.attempts = 0; S.wrongButtons = [];
             document.getElementById('dayButtons').style.display = 'none';
             UI.history.innerHTML = ''; 
             UI.container.innerHTML = '<div class="num-item start-text fade-in">СТАРТ</div>';
@@ -846,7 +873,6 @@
 
             if (S.mode === 'dates') {
                 if (!S.auto && S.currentDate && !S.dateAnswered) {
-                    // Если ещё не ответили – ничего не делаем
                     return;
                 }
                 generateDate();
@@ -932,7 +958,6 @@
                 let el = document.createElement('div');
                 el.className = 'hist-item' + (h.isRed ? ' red' : '') + (h.isPhone ? ' phone' : '');
                 let label = h.text;
-                // Для дат показываем день недели только если ответили
                 if (h.isDate && h.answered && h.correctDay !== undefined) {
                     label += ' (' + DAYS[h.correctDay] + ')';
                 }
@@ -1019,12 +1044,10 @@
 
         window.handleStageClick = function() {
             if (UI.topBar.classList.contains('visible')) { UI.topBar.classList.remove('visible'); return; }
-            // Если режим дат и уже есть ответ – повторяем дату (озвучка)
             if (S.mode === 'dates' && S.dateAnswered && S.currentDate) {
                 repeatDate();
                 return;
             }
-            // Если дата показана, но ещё не ответили – ничего не делаем (ждём выбора дня)
             if (S.mode === 'dates' && S.currentDate && !S.dateAnswered) {
                 return;
             }
