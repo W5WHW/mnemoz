@@ -194,6 +194,29 @@
 
         .action-row { display: flex; gap: 10px; margin-top: 20px; }
         .action-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #333; color: white; font-family: inherit; cursor: pointer; font-weight: bold;}
+
+        /* --- Даты: кнопки дней недели --- */
+        .day-buttons {
+            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+            margin-top: 20px; width: 100%;
+        }
+        .day-btn {
+            background: var(--surface-light); border: 1px solid #444;
+            color: var(--text); padding: 12px 16px; border-radius: 12px;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer;
+            min-width: 50px; transition: 0.2s; font-family: inherit;
+        }
+        .day-btn:active { transform: scale(0.9); }
+        .day-btn.correct { background: #2e7d32; border-color: #4caf50; }
+        .day-btn.wrong { background: #b71c1c; border-color: #f44336; }
+        .day-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+        .recall-day-select {
+            width: 100%; margin-top: 5px;
+            background: var(--surface-light); color: white;
+            border: 1px solid #444; border-radius: 6px;
+            padding: 4px; font-family: inherit;
+        }
     </style>
 </head>
 <body>
@@ -213,6 +236,11 @@
     <div class="main-stage" id="stage" onclick="handleStageClick()">
         <div class="items-container" id="displayContainer">
             <div class="num-item start-text fade-in">СТАРТ</div>
+        </div>
+        <!-- Блок выбора дня недели для дат -->
+        <div id="dayButtons" style="display:none; margin-top:20px; width:100%;">
+            <div style="color:var(--text-dim); font-size:0.9rem; margin-bottom:10px;">Какой день недели?</div>
+            <div class="day-buttons" id="dayBtnContainer"></div>
         </div>
         <div class="replay-btn" id="btnReplay" onclick="replayAudio(event)">🔁 Послушать еще раз</div>
     </div>
@@ -264,6 +292,27 @@
                     <span style="font-size: 0.8rem;">Темп речи диктора:</span>
                     <input type="number" id="inpPhoneRate" value="1.0" step="0.1" style="width: 50px;">
                 </div>
+            </div>
+
+            <!-- Настройки дат -->
+            <div class="setting-group" id="setDates" style="display:none;">
+                <h3>📅 Диапазон дат</h3>
+                <div class="flex-row">
+                    <span>Год от:</span> <input type="number" id="inpYearFrom" value="1900" style="width:60px;">
+                    <span>до:</span> <input type="number" id="inpYearTo" value="2100" style="width:60px;">
+                </div>
+                <div class="flex-row">
+                    <span>Месяц от:</span> <input type="number" id="inpMonthFrom" value="1" min="1" max="12" style="width:50px;">
+                    <span>до:</span> <input type="number" id="inpMonthTo" value="12" min="1" max="12" style="width:50px;">
+                </div>
+                <div class="flex-row">
+                    <span>День от:</span> <input type="number" id="inpDayFrom" value="1" min="1" max="31" style="width:50px;">
+                    <span>до:</span> <input type="number" id="inpDayTo" value="31" min="1" max="31" style="width:50px;">
+                </div>
+                <label class="checkbox-label block">
+                    <span>🔁 Уникальные даты (без повторов)</span>
+                    <input type="checkbox" id="chkDateUnique" checked>
+                </label>
             </div>
 
             <div class="setting-group" id="setGeneralOpts">
@@ -337,16 +386,24 @@
 
         const SUITS = { 'S':'♠', 'H':'♥', 'D':'♦', 'C':'♣' };
         const VALS = { '2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','0':'10','J':'В','Q':'Д','K':'К','A':'Т' };
+        const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
         let allCardCodes = [];
         ['S','H','D','C'].forEach(s => Object.keys(VALS).forEach(v => allCardCodes.push(v+s)));
         allCardCodes.forEach(c => new Image().src = `https://deckofcardsapi.com/static/img/${c}.png`);
 
         let S = {
-            mode: 'numbers', // 'numbers', 'cards', 'phones'
+            mode: 'numbers', // 'numbers', 'cards', 'phones', 'dates'
             unique: false, auto: null, sound: false, started: false,
             deck: [], sessionSeq: [], histView: [], voices: [], customMap: {},
             timeStart: null, timeEnd: null, prefs: {},
-            currentAudioChunks: [], audioTimeouts: [] // Для правильных пауз в телефонах
+            currentAudioChunks: [], audioTimeouts: [],
+            // для дат
+            dateDeck: [],
+            currentDate: null,
+            currentDay: null,
+            correctCount: 0,
+            totalCount: 0,
+            dateAnswered: false
         };
 
         if ('speechSynthesis' in window) {
@@ -373,9 +430,7 @@
             if(type === 'long') navigator.vibrate([100, 50, 100, 50, 200]);
         }
 
-        // Умная озвучка с поддержкой пауз между чанками номера телефона
         function stopAudio() {
-            // Добавили безопасную проверку
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
             }
@@ -384,7 +439,6 @@
         }
 
         function playAudioSequence(chunks) {
-            // Убрали проверку !('speechSynthesis' in window)
             if (!S.sound) return; 
             stopAudio();
             
@@ -420,7 +474,6 @@
                         S.audioTimeouts.push(t);
                     }
                 } else {
-                    // Страховка для браузера
                     if ('speechSynthesis' in window) {
                         let ut = new SpeechSynthesisUtterance(phrase);
                         ut.lang = 'ru-RU'; ut.rate = rate;
@@ -442,7 +495,7 @@
         }
 
         window.replayAudio = function(e) {
-            e.stopPropagation(); // Чтобы не сработал клик по экрану
+            e.stopPropagation();
             vibrate('short');
             if(S.currentAudioChunks && S.currentAudioChunks.length > 0) {
                 playAudioSequence(S.currentAudioChunks);
@@ -459,11 +512,19 @@
             S.prefs.haptic = document.getElementById('chkHaptic').checked;
             S.prefs.phantom = document.getElementById('chkPhantom').checked;
             
+            // Настройки дат
+            S.prefs.yearFrom = parseInt(document.getElementById('inpYearFrom').value) || 1900;
+            S.prefs.yearTo = parseInt(document.getElementById('inpYearTo').value) || 2100;
+            S.prefs.monthFrom = parseInt(document.getElementById('inpMonthFrom').value) || 1;
+            S.prefs.monthTo = parseInt(document.getElementById('inpMonthTo').value) || 12;
+            S.prefs.dayFrom = parseInt(document.getElementById('inpDayFrom').value) || 1;
+            S.prefs.dayTo = parseInt(document.getElementById('inpDayTo').value) || 31;
+            S.prefs.dateUnique = document.getElementById('chkDateUnique').checked;
+
             parseCustomImages();
             UI.history.style.opacity = S.prefs.showHistory ? '1' : '0';
             document.body.className = S.prefs.phantom ? 'phantom-mode' : '';
             
-            // Кнопка реплея видна только если включен звук (или это режим телефонов, где звук критичен)
             UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) && S.started ? 'flex' : 'none';
 
             updateStatus(); checkVerifyVisibility();
@@ -479,8 +540,13 @@
             if(!S.prefs.showPill) { UI.pill.classList.remove('visible'); return; }
             let txt = [];
             if (S.auto) txt.push("▶ АВТО");
-            if (S.mode !== 'phones' && S.unique) txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
-            else if (S.started) txt.push(`В ПАМЯТИ: ${S.sessionSeq.length}`);
+            if (S.mode === 'dates' && S.started) {
+                txt.push(`✅ ${S.correctCount}/${S.totalCount}`);
+            } else if (S.mode !== 'phones' && S.unique && S.started) {
+                txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
+            } else if (S.started && S.mode !== 'dates') {
+                txt.push(`В ПАМЯТИ: ${S.sessionSeq.length}`);
+            }
             
             UI.pill.textContent = txt.join(" | ");
             UI.pill.classList.toggle('visible', txt.length > 0);
@@ -530,10 +596,140 @@
             }
         }
 
+        function generateDate() {
+            let yFrom = S.prefs.yearFrom, yTo = S.prefs.yearTo;
+            let mFrom = S.prefs.monthFrom, mTo = S.prefs.monthTo;
+            let dFrom = S.prefs.dayFrom, dTo = S.prefs.dayTo;
+            if (yFrom > yTo) [yFrom, yTo] = [yTo, yFrom];
+            if (mFrom > mTo) [mFrom, mTo] = [mTo, mFrom];
+            if (dFrom > dTo) [dFrom, dTo] = [dTo, dFrom];
+
+            let date, attempts = 0;
+            const maxAttempts = 1000;
+            let isValid = false;
+
+            if (S.unique && S.prefs.dateUnique) {
+                if (S.dateDeck.length === 0) {
+                    S.dateDeck = [];
+                    for (let y = yFrom; y <= yTo; y++) {
+                        for (let m = mFrom; m <= mTo; m++) {
+                            let daysInMonth = new Date(y, m, 0).getDate();
+                            let dStart = (m === mFrom && y === yFrom) ? dFrom : 1;
+                            let dEnd = (m === mTo && y === yTo) ? Math.min(dTo, daysInMonth) : daysInMonth;
+                            for (let d = dStart; d <= dEnd; d++) {
+                                let dt = new Date(y, m-1, d);
+                                if (dt.getMonth() === m-1 && dt.getFullYear() === y && dt.getDate() === d) {
+                                    S.dateDeck.push(dt);
+                                }
+                            }
+                        }
+                    }
+                    for (let i = S.dateDeck.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [S.dateDeck[i], S.dateDeck[j]] = [S.dateDeck[j], S.dateDeck[i]];
+                    }
+                }
+                if (S.dateDeck.length === 0) { finishSequence(); return null; }
+                date = S.dateDeck.pop();
+            } else {
+                while (attempts < maxAttempts) {
+                    let year = yFrom + Math.floor(Math.random() * (yTo - yFrom + 1));
+                    let month = mFrom + Math.floor(Math.random() * (mTo - mFrom + 1));
+                    let maxDay = new Date(year, month, 0).getDate();
+                    let dayMin = (month === mFrom && year === yFrom) ? dFrom : 1;
+                    let dayMax = (month === mTo && year === yTo) ? Math.min(dTo, maxDay) : maxDay;
+                    if (dayMin > dayMax) { attempts++; continue; }
+                    let day = dayMin + Math.floor(Math.random() * (dayMax - dayMin + 1));
+                    date = new Date(year, month-1, day);
+                    if (date.getMonth() === month-1 && date.getFullYear() === year && date.getDate() === day) {
+                        isValid = true;
+                        break;
+                    }
+                    attempts++;
+                }
+                if (!isValid) { finishSequence(); return null; }
+            }
+
+            S.currentDate = date;
+            S.currentDay = date.getDay(); // 0=воскресенье
+            S.totalCount++;
+            S.dateAnswered = false;
+
+            UI.container.innerHTML = '';
+            let div = document.createElement('div');
+            div.className = 'num-item fade-in';
+            let day = String(date.getDate()).padStart(2,'0');
+            let month = String(date.getMonth()+1).padStart(2,'0');
+            let year = date.getFullYear();
+            div.textContent = `${day}.${month}.${year}`;
+            UI.container.appendChild(div);
+
+            const dayContainer = document.getElementById('dayBtnContainer');
+            dayContainer.innerHTML = '';
+            const btnBlock = document.getElementById('dayButtons');
+            btnBlock.style.display = 'flex';
+            btnBlock.style.flexDirection = 'column';
+            btnBlock.style.alignItems = 'center';
+
+            DAYS.forEach((name, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'day-btn';
+                btn.textContent = name;
+                btn.dataset.idx = idx;
+                btn.onclick = function(e) { onDaySelect(idx, this); };
+                dayContainer.appendChild(btn);
+            });
+
+            UI.btnReplay.style.display = 'none';
+            UI.btnVerify.classList.remove('visible');
+
+            let histObj = { text: div.textContent, isDate: true, correctDay: S.currentDay };
+            S.sessionSeq.push(histObj);
+            S.histView.unshift(histObj);
+            updateHistoryStrip();
+            updateStatus();
+
+            return date;
+        }
+
+        function onDaySelect(selectedIdx, btnElement) {
+            if (S.dateAnswered) return;
+            S.dateAnswered = true;
+
+            const correct = (selectedIdx === S.currentDay);
+            if (correct) S.correctCount++;
+
+            const allBtns = document.querySelectorAll('.day-btn');
+            allBtns.forEach((b, i) => {
+                b.classList.add('disabled');
+                if (i === S.currentDay) b.classList.add('correct');
+                else if (i === selectedIdx && !correct) b.classList.add('wrong');
+            });
+
+            updateStatus();
+
+            if (S.auto) {
+                setTimeout(() => {
+                    document.getElementById('dayButtons').style.display = 'none';
+                    window.generate();
+                }, 1500);
+            } else {
+                const hint = document.createElement('div');
+                hint.style.color = 'var(--text-dim)';
+                hint.style.fontSize = '0.8rem';
+                hint.style.marginTop = '10px';
+                hint.textContent = 'Нажмите на экран для следующей даты';
+                document.getElementById('dayButtons').appendChild(hint);
+            }
+        }
+
         function resetToStart() {
             if (S.auto) window.toggleAuto();
             stopAudio();
             S.started = false; S.sessionSeq = []; S.histView = []; S.timeStart = null; S.timeEnd = null;
+            S.currentDate = null; S.currentDay = null; S.correctCount = 0; S.totalCount = 0;
+            S.dateAnswered = false; S.dateDeck = [];
+            document.getElementById('dayButtons').style.display = 'none';
             UI.history.innerHTML = ''; 
             UI.container.innerHTML = '<div class="num-item start-text fade-in">СТАРТ</div>';
             UI.btnReplay.style.display = 'none';
@@ -543,7 +739,7 @@
         window.generate = function() {
             if (!S.started) { 
                 S.started = true; S.timeStart = Date.now();
-                if (S.unique && S.mode !== 'phones') buildDeck(); 
+                if (S.unique && S.mode !== 'phones' && S.mode !== 'dates') buildDeck(); 
                 checkVerifyVisibility(); 
                 UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) ? 'flex' : 'none';
             }
@@ -551,6 +747,14 @@
             if (S.mode === 'phones') {
                 let phone = generatePhone();
                 drawPhone(phone);
+                return;
+            }
+
+            if (S.mode === 'dates') {
+                if (!S.auto && S.currentDate && !S.dateAnswered) {
+                    return;
+                }
+                generateDate();
                 return;
             }
 
@@ -639,7 +843,11 @@
             S.histView.forEach((h, i) => {
                 let el = document.createElement('div');
                 el.className = 'hist-item' + (h.isRed ? ' red' : '') + (h.isPhone ? ' phone' : '');
-                el.textContent = h.text;
+                let label = h.text;
+                if (h.isDate && h.correctDay !== undefined) {
+                    label += ' (' + DAYS[h.correctDay] + ')';
+                }
+                el.textContent = label;
                 if(i>0) { el.style.transform = `scale(${1 - i*0.1})`; el.style.opacity = 0.5 - i*0.1; }
                 UI.history.appendChild(el);
             });
@@ -665,30 +873,36 @@
         window.toggleMode = function() {
             if (S.mode === 'numbers') S.mode = 'cards';
             else if (S.mode === 'cards') S.mode = 'phones';
+            else if (S.mode === 'phones') S.mode = 'dates';
             else S.mode = 'numbers';
 
-            UI.icons.mode.textContent = S.mode === 'cards' ? '🃏' : (S.mode === 'phones' ? '📱' : '🔢');
+            let iconText = S.mode === 'cards' ? '🃏' : (S.mode === 'phones' ? '📱' : (S.mode === 'dates' ? '📅' : '🔢'));
+            UI.icons.mode.textContent = iconText;
             UI.icons.mode.classList.toggle('active', S.mode !== 'numbers');
             
             UI.blocks.num.style.display = S.mode === 'numbers' ? 'block' : 'none';
             UI.blocks.card.style.display = S.mode === 'cards' ? 'block' : 'none';
             UI.blocks.phone.style.display = S.mode === 'phones' ? 'block' : 'none';
-            UI.blocks.customImg.style.display = S.mode === 'phones' ? 'none' : 'block';
-            UI.blocks.chunkRow.style.display = S.mode === 'phones' ? 'none' : 'flex';
+            document.getElementById('setDates').style.display = S.mode === 'dates' ? 'block' : 'none';
+            UI.blocks.customImg.style.display = (S.mode === 'phones' || S.mode === 'dates') ? 'none' : 'block';
+            UI.blocks.chunkRow.style.display = (S.mode === 'phones' || S.mode === 'dates') ? 'none' : 'flex';
             
-            // Телефоны всегда бесконечные
-            UI.btnUnique.style.opacity = S.mode === 'phones' ? '0.3' : '1';
-            UI.btnUnique.style.pointerEvents = S.mode === 'phones' ? 'none' : 'auto';
-            if (S.mode === 'phones' && S.unique) window.toggleUnique();
-            
-            // Если карты, автоматически ставим уникальный режим (колода)
-            if (S.mode === 'cards' && !S.unique) window.toggleUnique();
+            // Телефоны и даты – всегда бесконечные (unique отключаем)
+            if (S.mode === 'phones' || S.mode === 'dates') {
+                UI.btnUnique.style.opacity = '0.3';
+                UI.btnUnique.style.pointerEvents = 'none';
+                if (S.unique) window.toggleUnique();
+            } else {
+                UI.btnUnique.style.opacity = '1';
+                UI.btnUnique.style.pointerEvents = 'auto';
+                if (S.mode === 'cards' && !S.unique) window.toggleUnique();
+            }
 
             resetToStart();
         }
 
         window.toggleUnique = function() {
-            if(S.mode === 'phones') return;
+            if(S.mode === 'phones' || S.mode === 'dates') return;
             S.unique = !S.unique;
             UI.icons.unq.textContent = S.unique ? '🔀' : '♾️';
             UI.icons.unq.classList.toggle('active', S.unique);
@@ -707,7 +921,7 @@
                 clearInterval(S.auto); S.auto = null;
                 UI.icons.auto.textContent = "▶️"; UI.icons.auto.classList.remove('active');
             } else {
-                if (!S.started && S.unique && S.deck.length===0 && S.mode !== 'phones') buildDeck();
+                if (!S.started && S.unique && S.deck.length===0 && S.mode !== 'phones' && S.mode !== 'dates') buildDeck();
                 window.generate();
                 const ms = parseFloat(document.getElementById('inpTimer').value) * 1000;
                 S.auto = setInterval(window.generate, ms);
@@ -718,11 +932,21 @@
 
         window.handleStageClick = function() {
             if (UI.topBar.classList.contains('visible')) { UI.topBar.classList.remove('visible'); return; }
+            // Если режим дат и уже есть ответ, генерируем новую
+            if (S.mode === 'dates' && S.dateAnswered && S.started) {
+                document.getElementById('dayButtons').style.display = 'none';
+                window.generate();
+                return;
+            }
             if (S.auto) window.toggleAuto(); else window.generate();
         }
 
         window.openSettings = function() { UI.modals.set.classList.add('open'); if(S.auto) window.toggleAuto(); }
-        window.closeSettings = function() { UI.modals.set.classList.remove('open'); readPreferences(); resetToStart(); }
+        window.closeSettings = function() { 
+            UI.modals.set.classList.remove('open'); 
+            S.dateDeck = []; // сброс колоды дат
+            readPreferences(); resetToStart(); 
+        }
 
         // --- Модалка Проверки ---
         window.openRecall = function() {
@@ -740,12 +964,16 @@
             const grid = document.getElementById('recallGrid'); grid.innerHTML = '';
             if (S.mode === 'phones') grid.classList.add('phones'); else grid.classList.remove('phones');
 
-            S.sessionSeq.forEach(item => {
+            const isDates = S.mode === 'dates';
+
+            S.sessionSeq.forEach((item, index) => {
                 let wrap = document.createElement('div'); wrap.className = 'recall-cell-wrapper';
                 
                 const cell = document.createElement('div');
-                cell.className = 'recall-cell'; cell.textContent = item.text;
+                cell.className = 'recall-cell';
+                cell.textContent = item.text;
                 if (item.isRed) cell.dataset.red = "true";
+                if (item.correctDay !== undefined) cell.dataset.correctDay = item.correctDay;
                 cell.onclick = function() { this.classList.add('revealed'); if (this.dataset.red) this.classList.add('red'); };
                 wrap.appendChild(cell);
 
@@ -753,6 +981,20 @@
                     let lbl = document.createElement('div'); lbl.className = 'custom-image-label';
                     lbl.textContent = item.customText; wrap.appendChild(lbl);
                 }
+
+                if (isDates) {
+                    const select = document.createElement('select');
+                    select.className = 'recall-day-select';
+                    select.dataset.index = index;
+                    const opt0 = document.createElement('option'); opt0.value = ''; opt0.textContent = '—';
+                    select.appendChild(opt0);
+                    DAYS.forEach((name, idx) => {
+                        const opt = document.createElement('option'); opt.value = idx; opt.textContent = name;
+                        select.appendChild(opt);
+                    });
+                    wrap.appendChild(select);
+                }
+
                 grid.appendChild(wrap);
             });
             UI.modals.rec.classList.add('open');
@@ -761,19 +1003,39 @@
         window.closeRecall = function() { UI.modals.rec.classList.remove('open'); }
         window.revealAll = function() {
             document.querySelectorAll('.recall-cell').forEach(c => {
-                c.classList.add('revealed'); if (c.dataset.red) c.classList.add('red');
+                c.classList.add('revealed');
+                if (c.dataset.red) c.classList.add('red');
+                const wrapper = c.parentElement;
+                const select = wrapper.querySelector('.recall-day-select');
+                if (select) {
+                    const correctDay = c.dataset.correctDay;
+                    if (correctDay !== undefined) {
+                        select.value = correctDay;
+                        select.style.borderColor = '#4caf50';
+                        select.style.backgroundColor = '#1e3a1e';
+                        select.disabled = true;
+                    }
+                }
             });
         }
 
         window.exportData = function() {
-            let typeName = S.mode === 'numbers' ? 'Числа' : (S.mode === 'cards' ? 'Карты' : 'Телефоны');
+            let typeName = S.mode === 'numbers' ? 'Числа' : (S.mode === 'cards' ? 'Карты' : (S.mode === 'dates' ? 'Даты' : 'Телефоны'));
             let str = `## Тренировка (${typeName})\n`;
             if(S.prefs.timer && S.timeStart) {
                 let sec = Math.floor(((S.timeEnd || Date.now()) - S.timeStart) / 1000);
                 str += `⏱ Время: ${sec} сек.\n`;
             }
+            if (S.mode === 'dates') {
+                str += `Правильных: ${S.correctCount} из ${S.totalCount}\n`;
+            }
             str += `\n**Последовательность (${S.sessionSeq.length}):**\n`;
-            str += S.sessionSeq.map(i => i.customText ? `${i.text}(${i.customText})` : i.text).join(S.mode === 'phones' ? '\n' : ' - ');
+            str += S.sessionSeq.map(i => {
+                let base = i.text;
+                if (i.isDate && i.correctDay !== undefined) base += ` (${DAYS[i.correctDay]})`;
+                if (i.customText) base += `(${i.customText})`;
+                return base;
+            }).join(S.mode === 'phones' ? '\n' : ' - ');
             try { navigator.clipboard.writeText(str).then(() => alert("Скопировано!")); } catch(e) {}
         }
 
