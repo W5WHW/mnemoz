@@ -29,6 +29,11 @@
         body.phantom-mode { background: #000; }
         body.phantom-mode .main-stage, body.phantom-mode .history-strip, body.phantom-mode .status-pill { opacity: 0 !important; pointer-events: none; }
 
+        /* Вспышки */
+        body.flash-correct { background: #1b5e20 !important; transition: background 0.1s; }
+        body.flash-wrong { background: #b71c1c !important; transition: background 0.1s; }
+        body.flash-correct .main-stage, body.flash-wrong .main-stage { transition: none; }
+
         /* --- Шторка --- */
         .trigger-zone { position: absolute; top: 0; width: 100%; height: 70px; z-index: 90; }
         
@@ -80,7 +85,8 @@
             line-height: 1; letter-spacing: -3px; text-shadow: 0 0 40px rgba(187, 134, 252, 0.2);
         }
         .num-item.small { font-size: 5rem; letter-spacing: -1px; }
-        .num-item.phone { font-size: 10vw; letter-spacing: 0px; color: var(--accent); } /* Адаптивный размер для телефона */
+        .num-item.phone { font-size: 10vw; letter-spacing: 0px; color: var(--accent); }
+        .num-item.date-word { font-size: 4rem; letter-spacing: 2px; color: var(--accent); }
         
         .start-text { font-size: 3rem !important; letter-spacing: 2px !important; color: var(--text-dim) !important; width: 100%; }
         
@@ -88,6 +94,18 @@
 
         .fade-in { animation: fadeIn 0.15s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Эффект цепочки (огонь) */
+        .streak-effect {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 6rem; z-index: 200; pointer-events: none;
+            animation: streakPop 1s ease-out forwards;
+        }
+        @keyframes streakPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+        }
 
         /* --- Кнопка Повтора (Replay) --- */
         .replay-btn {
@@ -173,7 +191,6 @@
             display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             gap: 10px; width: 100%; max-height: 50vh; overflow-y: auto; padding-right: 5px;
         }
-        /* Для телефонов ячейки шире */
         .recall-grid.phones { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
         
         .recall-cell-wrapper { display: flex; flex-direction: column; align-items: center; gap: 5px; }
@@ -211,6 +228,17 @@
         .day-btn.wrong { background: #b71c1c; border-color: #f44336; }
         .day-btn.disabled { opacity: 0.4; pointer-events: none; }
 
+        .date-controls {
+            display: flex; gap: 12px; margin-top: 15px; justify-content: center;
+        }
+        .date-controls button {
+            background: var(--surface-light); border: 1px solid #555;
+            color: var(--text); padding: 8px 18px; border-radius: 30px;
+            font-size: 0.9rem; font-family: inherit; cursor: pointer;
+            transition: 0.2s;
+        }
+        .date-controls button:active { transform: scale(0.9); }
+
         .recall-day-select {
             width: 100%; margin-top: 5px;
             background: var(--surface-light); color: white;
@@ -241,6 +269,10 @@
         <div id="dayButtons" style="display:none; margin-top:20px; width:100%;">
             <div style="color:var(--text-dim); font-size:0.9rem; margin-bottom:10px;">Какой день недели?</div>
             <div class="day-buttons" id="dayBtnContainer"></div>
+            <div class="date-controls">
+                <button id="btnRepeatDate" onclick="repeatDate()">🔊 Повторить дату</button>
+                <button id="btnSkipDate" onclick="skipDate()">⏭️ Скип</button>
+            </div>
         </div>
         <div class="replay-btn" id="btnReplay" onclick="replayAudio(event)">🔁 Послушать еще раз</div>
     </div>
@@ -312,6 +344,10 @@
                 <label class="checkbox-label block">
                     <span>🔁 Уникальные даты (без повторов)</span>
                     <input type="checkbox" id="chkDateUnique" checked>
+                </label>
+                <label class="checkbox-label block">
+                    <span>📝 Показывать месяц словами</span>
+                    <input type="checkbox" id="chkDateWords">
                 </label>
             </div>
 
@@ -387,23 +423,27 @@
         const SUITS = { 'S':'♠', 'H':'♥', 'D':'♦', 'C':'♣' };
         const VALS = { '2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','0':'10','J':'В','Q':'Д','K':'К','A':'Т' };
         const DAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+        const MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
         let allCardCodes = [];
         ['S','H','D','C'].forEach(s => Object.keys(VALS).forEach(v => allCardCodes.push(v+s)));
         allCardCodes.forEach(c => new Image().src = `https://deckofcardsapi.com/static/img/${c}.png`);
 
         let S = {
-            mode: 'numbers', // 'numbers', 'cards', 'phones', 'dates'
+            mode: 'numbers',
             unique: false, auto: null, sound: false, started: false,
             deck: [], sessionSeq: [], histView: [], voices: [], customMap: {},
             timeStart: null, timeEnd: null, prefs: {},
             currentAudioChunks: [], audioTimeouts: [],
-            // для дат
+            // даты
             dateDeck: [],
             currentDate: null,
             currentDay: null,
             correctCount: 0,
             totalCount: 0,
-            dateAnswered: false
+            dateAnswered: false,
+            streak: 0,
+            maxStreak: 0,
+            dateWords: false
         };
 
         if ('speechSynthesis' in window) {
@@ -431,28 +471,43 @@
         }
 
         function stopAudio() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             S.audioTimeouts.forEach(t => clearTimeout(t));
             S.audioTimeouts = [];
+        }
+
+        function speakText(text, rate = 1.0) {
+            if (!S.sound) return;
+            if (window.AndroidApp) {
+                window.AndroidApp.speak(text);
+                return;
+            }
+            if (!('speechSynthesis' in window)) return;
+            let ut = new SpeechSynthesisUtterance(text);
+            ut.lang = 'ru-RU'; ut.rate = rate;
+            let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
+            if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
+            window.speechSynthesis.speak(ut);
+        }
+
+        function speakDate(date) {
+            if (!S.sound) return;
+            let day = date.getDate();
+            let month = MONTHS[date.getMonth()];
+            let year = date.getFullYear();
+            speakText(`${day} ${month} ${year}`, 0.9);
         }
 
         function playAudioSequence(chunks) {
             if (!S.sound) return; 
             stopAudio();
-            
             let rate = S.mode === 'phones' ? parseFloat(document.getElementById('inpPhoneRate').value) || 1.0 : 1.0;
             let pauseMs = S.mode === 'phones' ? (parseFloat(document.getElementById('inpPhonePause').value) || 0) * 1000 : 0;
-            
             S.currentAudioChunks = chunks; 
-
             const playNext = (index) => {
                 if(index >= chunks.length) return;
-                
                 let item = chunks[index];
                 let phrase = item.text;
-
                 if (phrase === "СТАРТ" || phrase === "ВСЁ") phrase = phrase === "ВСЁ" ? "Всё! Готово" : "Начинаем";
                 else if (item.isCard) {
                     const sv = {'S':'пик','H':'червей','D':'бубен','C':'треф'};
@@ -462,44 +517,36 @@
                     let num = parseInt(item.text);
                     if (item.text.startsWith('0') && item.text.length === 2 && num < 10 && num > 0) phrase = "Ноль " + num;
                     else if (item.text === "00") phrase = "Ноль ноль";
-                    else if (item.text === "000") phrase = "Ноль ноль ноль";
                     else if (item.text.length === 3 && item.text.startsWith('00')) phrase = "Ноль ноль " + parseInt(item.text);
                     else if (item.text.length === 3 && item.text.startsWith('0')) phrase = "Ноль " + parseInt(item.text);
                 }
-
                 if (window.AndroidApp) {
                     window.AndroidApp.speak(phrase);
                     if(index + 1 < chunks.length) {
                         let t = setTimeout(() => playNext(index + 1), pauseMs + 1000); 
                         S.audioTimeouts.push(t);
                     }
-                } else {
-                    if ('speechSynthesis' in window) {
-                        let ut = new SpeechSynthesisUtterance(phrase);
-                        ut.lang = 'ru-RU'; ut.rate = rate;
-                        let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
-                        if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
-                        
-                        ut.onend = () => {
-                            if(index + 1 < chunks.length) {
-                                let t = setTimeout(() => playNext(index + 1), pauseMs);
-                                S.audioTimeouts.push(t);
-                            }
-                        };
-                        window.speechSynthesis.speak(ut);
-                    }
+                } else if ('speechSynthesis' in window) {
+                    let ut = new SpeechSynthesisUtterance(phrase);
+                    ut.lang = 'ru-RU'; ut.rate = rate;
+                    let ruVoices = S.voices.filter(v => v.lang.startsWith('ru'));
+                    if(ruVoices.length > 0) ut.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
+                    ut.onend = () => {
+                        if(index + 1 < chunks.length) {
+                            let t = setTimeout(() => playNext(index + 1), pauseMs);
+                            S.audioTimeouts.push(t);
+                        }
+                    };
+                    window.speechSynthesis.speak(ut);
                 }
             };
-
             playNext(0);
         }
 
         window.replayAudio = function(e) {
             e.stopPropagation();
             vibrate('short');
-            if(S.currentAudioChunks && S.currentAudioChunks.length > 0) {
-                playAudioSequence(S.currentAudioChunks);
-            }
+            if(S.currentAudioChunks && S.currentAudioChunks.length > 0) playAudioSequence(S.currentAudioChunks);
         }
 
         // --- Настройки ---
@@ -512,7 +559,6 @@
             S.prefs.haptic = document.getElementById('chkHaptic').checked;
             S.prefs.phantom = document.getElementById('chkPhantom').checked;
             
-            // Настройки дат
             S.prefs.yearFrom = parseInt(document.getElementById('inpYearFrom').value) || 1900;
             S.prefs.yearTo = parseInt(document.getElementById('inpYearTo').value) || 2100;
             S.prefs.monthFrom = parseInt(document.getElementById('inpMonthFrom').value) || 1;
@@ -520,13 +566,13 @@
             S.prefs.dayFrom = parseInt(document.getElementById('inpDayFrom').value) || 1;
             S.prefs.dayTo = parseInt(document.getElementById('inpDayTo').value) || 31;
             S.prefs.dateUnique = document.getElementById('chkDateUnique').checked;
+            S.dateWords = document.getElementById('chkDateWords').checked;
 
             parseCustomImages();
             UI.history.style.opacity = S.prefs.showHistory ? '1' : '0';
             document.body.className = S.prefs.phantom ? 'phantom-mode' : '';
             
             UI.btnReplay.style.display = (S.mode === 'phones' || S.sound) && S.started ? 'flex' : 'none';
-
             updateStatus(); checkVerifyVisibility();
         }
 
@@ -542,12 +588,12 @@
             if (S.auto) txt.push("▶ АВТО");
             if (S.mode === 'dates' && S.started) {
                 txt.push(`✅ ${S.correctCount}/${S.totalCount}`);
+                if (S.streak > 1) txt.push(`🔥${S.streak}`);
             } else if (S.mode !== 'phones' && S.unique && S.started) {
                 txt.push(`ОСТАЛОСЬ: ${S.deck.length}`);
             } else if (S.started && S.mode !== 'dates') {
                 txt.push(`В ПАМЯТИ: ${S.sessionSeq.length}`);
             }
-            
             UI.pill.textContent = txt.join(" | ");
             UI.pill.classList.toggle('visible', txt.length > 0);
         }
@@ -556,19 +602,11 @@
         function generatePhone() {
             let region = document.getElementById('selPhoneRegion').value;
             if (region === 'rnd') region = Math.random() > 0.5 ? 'ru' : 'kz';
-            
-            let p1 = region === 'ru' 
-                ? '9' + Math.floor(Math.random()*10) + Math.floor(Math.random()*10)
-                : '7' + ['0','4','5','7'][Math.floor(Math.random()*4)] + Math.floor(Math.random()*10);
-            
+            let p1 = region === 'ru' ? '9' + Math.floor(Math.random()*10) + Math.floor(Math.random()*10) : '7' + ['0','4','5','7'][Math.floor(Math.random()*4)] + Math.floor(Math.random()*10);
             let p2 = String(Math.floor(Math.random()*1000)).padStart(3, '0');
             let p3 = String(Math.floor(Math.random()*100)).padStart(2, '0');
             let p4 = String(Math.floor(Math.random()*100)).padStart(2, '0');
-            
-            return {
-                formatted: `+7 (${p1}) ${p2}-${p3}-${p4}`,
-                audioChunks: [{text: p1}, {text: p2}, {text: p3}, {text: p4}]
-            };
+            return { formatted: `+7 (${p1}) ${p2}-${p3}-${p4}`, audioChunks: [{text: p1}, {text: p2}, {text: p3}, {text: p4}] };
         }
 
         function buildDeck() {
@@ -604,9 +642,7 @@
             if (mFrom > mTo) [mFrom, mTo] = [mTo, mFrom];
             if (dFrom > dTo) [dFrom, dTo] = [dTo, dFrom];
 
-            let date, attempts = 0;
-            const maxAttempts = 1000;
-            let isValid = false;
+            let date, attempts = 0, maxAttempts = 1000, isValid = false;
 
             if (S.unique && S.prefs.dateUnique) {
                 if (S.dateDeck.length === 0) {
@@ -618,9 +654,7 @@
                             let dEnd = (m === mTo && y === yTo) ? Math.min(dTo, daysInMonth) : daysInMonth;
                             for (let d = dStart; d <= dEnd; d++) {
                                 let dt = new Date(y, m-1, d);
-                                if (dt.getMonth() === m-1 && dt.getFullYear() === y && dt.getDate() === d) {
-                                    S.dateDeck.push(dt);
-                                }
+                                if (dt.getMonth() === m-1 && dt.getFullYear() === y && dt.getDate() === d) S.dateDeck.push(dt);
                             }
                         }
                     }
@@ -641,27 +675,32 @@
                     if (dayMin > dayMax) { attempts++; continue; }
                     let day = dayMin + Math.floor(Math.random() * (dayMax - dayMin + 1));
                     date = new Date(year, month-1, day);
-                    if (date.getMonth() === month-1 && date.getFullYear() === year && date.getDate() === day) {
-                        isValid = true;
-                        break;
-                    }
+                    if (date.getMonth() === month-1 && date.getFullYear() === year && date.getDate() === day) { isValid = true; break; }
                     attempts++;
                 }
                 if (!isValid) { finishSequence(); return null; }
             }
 
             S.currentDate = date;
-            S.currentDay = date.getDay(); // 0=воскресенье
+            S.currentDay = date.getDay();
             S.totalCount++;
             S.dateAnswered = false;
 
             UI.container.innerHTML = '';
             let div = document.createElement('div');
             div.className = 'num-item fade-in';
-            let day = String(date.getDate()).padStart(2,'0');
-            let month = String(date.getMonth()+1).padStart(2,'0');
-            let year = date.getFullYear();
-            div.textContent = `${day}.${month}.${year}`;
+            if (S.dateWords) {
+                div.classList.add('date-word');
+                let day = date.getDate();
+                let month = MONTHS[date.getMonth()];
+                let year = date.getFullYear();
+                div.textContent = `${day} ${month} ${year}`;
+            } else {
+                let day = String(date.getDate()).padStart(2,'0');
+                let month = String(date.getMonth()+1).padStart(2,'0');
+                let year = date.getFullYear();
+                div.textContent = `${day}.${month}.${year}`;
+            }
             UI.container.appendChild(div);
 
             const dayContainer = document.getElementById('dayBtnContainer');
@@ -680,14 +719,21 @@
                 dayContainer.appendChild(btn);
             });
 
+            // Показываем кнопки управления всегда
+            document.getElementById('btnRepeatDate').style.display = 'inline-block';
+            document.getElementById('btnSkipDate').style.display = 'inline-block';
+
             UI.btnReplay.style.display = 'none';
             UI.btnVerify.classList.remove('visible');
 
-            let histObj = { text: div.textContent, isDate: true, correctDay: S.currentDay };
+            let histObj = { text: div.textContent, isDate: true, correctDay: S.currentDay, answered: false };
             S.sessionSeq.push(histObj);
             S.histView.unshift(histObj);
             updateHistoryStrip();
             updateStatus();
+
+            // Если звук включён – озвучиваем дату автоматически (опционально)
+            if (S.sound) speakDate(date);
 
             return date;
         }
@@ -695,9 +741,25 @@
         function onDaySelect(selectedIdx, btnElement) {
             if (S.dateAnswered) return;
             S.dateAnswered = true;
-
             const correct = (selectedIdx === S.currentDay);
-            if (correct) S.correctCount++;
+            if (correct) {
+                S.correctCount++;
+                S.streak++;
+                if (S.streak > S.maxStreak) S.maxStreak = S.streak;
+                // эффект цепочки
+                showStreakEffect();
+                document.body.classList.add('flash-correct');
+                setTimeout(() => document.body.classList.remove('flash-correct'), 300);
+            } else {
+                S.streak = 0;
+                document.body.classList.add('flash-wrong');
+                setTimeout(() => document.body.classList.remove('flash-wrong'), 300);
+            }
+
+            // Обновляем историю – отмечаем, что ответ дан
+            const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
+            if (lastHist && lastHist.isDate) lastHist.answered = true;
+            updateHistoryStrip();
 
             const allBtns = document.querySelectorAll('.day-btn');
             allBtns.forEach((b, i) => {
@@ -714,13 +776,45 @@
                     window.generate();
                 }, 1500);
             } else {
-                const hint = document.createElement('div');
-                hint.style.color = 'var(--text-dim)';
-                hint.style.fontSize = '0.8rem';
-                hint.style.marginTop = '10px';
-                hint.textContent = 'Нажмите на экран для следующей даты';
-                document.getElementById('dayButtons').appendChild(hint);
+                // В ручном режиме просто ждём следующего клика или кнопки скип/повтор
             }
+        }
+
+        function showStreakEffect() {
+            const el = document.createElement('div');
+            el.className = 'streak-effect';
+            el.textContent = '🔥';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function repeatDate() {
+            if (S.currentDate) {
+                speakDate(S.currentDate);
+                vibrate('short');
+            }
+        }
+
+        function skipDate() {
+            if (S.dateAnswered) return; // уже ответили, скип не нужен
+            S.dateAnswered = true;
+            S.streak = 0; // сбрасываем серию
+            // Засчитываем как неправильный (totalCount уже увеличен, correctCount не меняем)
+            // Обновляем историю
+            const lastHist = S.sessionSeq[S.sessionSeq.length - 1];
+            if (lastHist && lastHist.isDate) lastHist.answered = true;
+            updateHistoryStrip();
+            // Показываем правильный ответ?
+            const allBtns = document.querySelectorAll('.day-btn');
+            allBtns.forEach((b, i) => {
+                b.classList.add('disabled');
+                if (i === S.currentDay) b.classList.add('correct');
+            });
+            // Небольшая задержка и переход
+            setTimeout(() => {
+                document.getElementById('dayButtons').style.display = 'none';
+                window.generate();
+            }, 500);
         }
 
         function resetToStart() {
@@ -728,7 +822,7 @@
             stopAudio();
             S.started = false; S.sessionSeq = []; S.histView = []; S.timeStart = null; S.timeEnd = null;
             S.currentDate = null; S.currentDay = null; S.correctCount = 0; S.totalCount = 0;
-            S.dateAnswered = false; S.dateDeck = [];
+            S.dateAnswered = false; S.dateDeck = []; S.streak = 0; S.maxStreak = 0;
             document.getElementById('dayButtons').style.display = 'none';
             UI.history.innerHTML = ''; 
             UI.container.innerHTML = '<div class="num-item start-text fade-in">СТАРТ</div>';
@@ -752,6 +846,7 @@
 
             if (S.mode === 'dates') {
                 if (!S.auto && S.currentDate && !S.dateAnswered) {
+                    // Если ещё не ответили – ничего не делаем
                     return;
                 }
                 generateDate();
@@ -782,12 +877,10 @@
         function drawPhone(phone) {
             UI.container.innerHTML = '';
             let histObj = { raw: phone.formatted, text: phone.formatted, isPhone: true, customText: '' };
-            
             let div = document.createElement('div');
             div.className = `num-item phone fade-in`;
             div.textContent = phone.formatted;
             UI.container.appendChild(div);
-
             S.sessionSeq.push(histObj);
             S.histView.unshift(histObj);
             updateHistoryStrip();
@@ -800,16 +893,13 @@
             UI.container.innerHTML = '';
             let row = document.createElement('div'); row.className = 'chunks-row';
             let speakArr = [];
-
             items.forEach(item => {
                 let histObj = { raw: item, text: '', isRed: false, isCard: S.mode === 'cards', customText: '' };
-                
                 if (S.mode === 'numbers') {
                     let max = parseInt(document.getElementById('inpMax').value) || 99;
                     const txt = item.toString().padStart(max > 99 ? 3 : 2, '0');
                     histObj.text = txt; histObj.customText = S.customMap[txt] || '';
                     speakArr.push({text: txt, isCard: false, num: item});
-
                     let div = document.createElement('div');
                     div.className = `num-item fade-in ${S.prefs.chunkSize > 1 || txt.length > 2 ? 'small' : ''}`;
                     div.textContent = txt; row.appendChild(div);
@@ -819,7 +909,6 @@
                     let mapKey = item[0] === '0' ? '10'+item[1] : item;
                     histObj.customText = S.customMap[mapKey] || S.customMap[item[0]] || ''; 
                     speakArr.push({text: item, isCard: true});
-
                     let img = document.createElement('img');
                     img.className = 'card-item fade-in';
                     img.src = `https://deckofcardsapi.com/static/img/${item}.png`;
@@ -829,7 +918,6 @@
                 S.sessionSeq.push(histObj);
                 S.histView.unshift(histObj);
             });
-
             UI.container.appendChild(row);
             updateHistoryStrip();
             vibrate('short');
@@ -844,7 +932,8 @@
                 let el = document.createElement('div');
                 el.className = 'hist-item' + (h.isRed ? ' red' : '') + (h.isPhone ? ' phone' : '');
                 let label = h.text;
-                if (h.isDate && h.correctDay !== undefined) {
+                // Для дат показываем день недели только если ответили
+                if (h.isDate && h.answered && h.correctDay !== undefined) {
                     label += ' (' + DAYS[h.correctDay] + ')';
                 }
                 el.textContent = label;
@@ -887,7 +976,6 @@
             UI.blocks.customImg.style.display = (S.mode === 'phones' || S.mode === 'dates') ? 'none' : 'block';
             UI.blocks.chunkRow.style.display = (S.mode === 'phones' || S.mode === 'dates') ? 'none' : 'flex';
             
-            // Телефоны и даты – всегда бесконечные (unique отключаем)
             if (S.mode === 'phones' || S.mode === 'dates') {
                 UI.btnUnique.style.opacity = '0.3';
                 UI.btnUnique.style.pointerEvents = 'none';
@@ -897,7 +985,6 @@
                 UI.btnUnique.style.pointerEvents = 'auto';
                 if (S.mode === 'cards' && !S.unique) window.toggleUnique();
             }
-
             resetToStart();
         }
 
@@ -932,10 +1019,13 @@
 
         window.handleStageClick = function() {
             if (UI.topBar.classList.contains('visible')) { UI.topBar.classList.remove('visible'); return; }
-            // Если режим дат и уже есть ответ, генерируем новую
-            if (S.mode === 'dates' && S.dateAnswered && S.started) {
-                document.getElementById('dayButtons').style.display = 'none';
-                window.generate();
+            // Если режим дат и уже есть ответ – повторяем дату (озвучка)
+            if (S.mode === 'dates' && S.dateAnswered && S.currentDate) {
+                repeatDate();
+                return;
+            }
+            // Если дата показана, но ещё не ответили – ничего не делаем (ждём выбора дня)
+            if (S.mode === 'dates' && S.currentDate && !S.dateAnswered) {
                 return;
             }
             if (S.auto) window.toggleAuto(); else window.generate();
@@ -944,14 +1034,13 @@
         window.openSettings = function() { UI.modals.set.classList.add('open'); if(S.auto) window.toggleAuto(); }
         window.closeSettings = function() { 
             UI.modals.set.classList.remove('open'); 
-            S.dateDeck = []; // сброс колоды дат
+            S.dateDeck = [];
             readPreferences(); resetToStart(); 
         }
 
         // --- Модалка Проверки ---
         window.openRecall = function() {
             if(S.auto) window.toggleAuto();
-            
             let timeText = "";
             if(S.prefs.timer && S.timeStart) {
                 let end = S.timeEnd || Date.now();
@@ -968,7 +1057,6 @@
 
             S.sessionSeq.forEach((item, index) => {
                 let wrap = document.createElement('div'); wrap.className = 'recall-cell-wrapper';
-                
                 const cell = document.createElement('div');
                 cell.className = 'recall-cell';
                 cell.textContent = item.text;
@@ -1028,6 +1116,7 @@
             }
             if (S.mode === 'dates') {
                 str += `Правильных: ${S.correctCount} из ${S.totalCount}\n`;
+                str += `Макс. серия: ${S.maxStreak}\n`;
             }
             str += `\n**Последовательность (${S.sessionSeq.length}):**\n`;
             str += S.sessionSeq.map(i => {
