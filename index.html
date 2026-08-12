@@ -434,6 +434,89 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
+
+        /* ── MARATHON MODE ── */
+        .marathon-screen {
+            position: fixed; inset: 0; background: var(--bg); z-index: 500;
+            display: none; flex-direction: column; align-items: center;
+            padding: 18px 16px 24px; overflow-y: auto;
+        }
+        .marathon-screen.open { display: flex; }
+        .marathon-head {
+            display: flex; justify-content: space-between; align-items: center; width: 100%;
+            max-width: 640px; margin-bottom: 8px;
+        }
+        .marathon-head .round-badge {
+            font-family: var(--mono); font-size: 0.78rem; color: var(--primary);
+            background: var(--surface2); padding: 6px 14px; border-radius: 20px; letter-spacing: 1px;
+        }
+        .marathon-head .close-btn {
+            font-size: 1.3rem; color: var(--text3); cursor: pointer; padding: 6px 12px;
+        }
+        .marathon-phase-label {
+            font-size: 0.7rem; letter-spacing: 3px; color: var(--text3); margin-bottom: 8px; text-transform: uppercase;
+        }
+        .marathon-timer-wrap { width: 100%; max-width: 380px; margin-bottom: 16px; }
+        .marathon-timer-num {
+            font-family: var(--mono); font-size: 2.2rem; font-weight: 700; color: var(--primary);
+            text-align: center; text-shadow: 0 0 40px var(--primary-glow);
+        }
+        .marathon-timer-bar-bg { height: 6px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+        .marathon-timer-bar { height: 100%; background: var(--primary); border-radius: 4px; width: 100%; }
+
+        .marathon-body { flex: 1; width: 100%; max-width: 640px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        .mar-study-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; max-width: 100%; }
+        .mar-study-num {
+            font-family: var(--mono); font-size: 1.8rem; font-weight: 700; color: var(--primary);
+            background: var(--surface2); border-radius: 10px; padding: 10px 16px; min-width: 46px; text-align: center;
+        }
+        .mar-study-card { width: 58px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+
+        .mar-single-num { font-family: var(--mono); font-size: 6rem; font-weight: 700; color: var(--primary); text-shadow: 0 0 60px var(--primary-glow); }
+        .mar-single-card { max-width: 55vw; max-height: 52vh; border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+        .mar-progress-label { font-family: var(--mono); font-size: 0.75rem; color: var(--text3); margin-top: 14px; letter-spacing: 1px; }
+
+        .mar-recall-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+            gap: 8px; width: 100%; margin-bottom: 20px;
+        }
+        .mar-cell {
+            background: var(--surface2); border: 2px solid var(--border); border-radius: 10px;
+            aspect-ratio: 1; display: flex; justify-content: center; align-items: center;
+            font-family: var(--mono); font-weight: 700; font-size: 0.95rem; cursor: pointer;
+            color: var(--text); transition: 0.15s; position: relative;
+        }
+        .mar-cell.active { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+        .mar-cell.filled { background: var(--surface3); }
+        .mar-cell.correct { background: #14532d; border-color: #22c55e; color: #86efac; }
+        .mar-cell.wrong { background: #450a0a; border-color: #ef4444; color: #fca5a5; }
+        .mar-cell .true-answer { position: absolute; bottom: -17px; font-size: 0.6rem; color: var(--text3); white-space: nowrap; }
+
+        .mar-keypad { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 440px; margin: 0 auto; }
+        .keypad-btn {
+            background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+            min-width: 46px; height: 50px; border-radius: 12px; font-family: var(--mono);
+            font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.15s; padding: 0 10px;
+        }
+        .keypad-btn:active { transform: scale(0.9); background: var(--surface3); }
+        .keypad-btn.selected { background: var(--primary); color: #1a1030; border-color: var(--primary); }
+        .keypad-btn.suit-red { color: #f87171; }
+        .keypad-btn.suit-black { color: #e2e8f0; }
+        .keypad-btn.wide { min-width: 90px; }
+        .mar-keypad-hint { font-size: 0.7rem; color: var(--text3); text-align: center; margin-bottom: 10px; letter-spacing: 0.5px; }
+
+        .mar-actions { display: flex; gap: 10px; margin-top: 16px; width: 100%; max-width: 420px; }
+        .mar-actions button { flex: 1; }
+
+        .mar-results { text-align: center; width: 100%; max-width: 420px; }
+        .mar-score { font-family: var(--mono); font-size: 3rem; font-weight: 700; color: var(--text); margin: 8px 0; }
+        .mar-score.good { color: var(--accent); }
+        .mar-score.bad { color: var(--red); }
+        .mar-result-stats { display: flex; gap: 10px; justify-content: center; margin: 14px 0 22px; flex-wrap: wrap; }
+        .mar-result-stat { background: var(--surface2); padding: 10px 16px; border-radius: 12px; }
+        .mar-result-stat .v { font-family: var(--mono); font-weight: 700; color: var(--primary); font-size: 1.1rem; }
+        .mar-result-stat .k { font-size: 0.6rem; color: var(--text3); letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -448,6 +531,7 @@
     <div class="icon-btn" onclick="toggleSound()"><div class="icon" id="iconSound">🔇</div><span class="lbl">ЗВУК</span></div>
     <div class="icon-btn" onclick="openSettings()"><div class="icon">⚙️</div><span class="lbl">НАСТР.</span></div>
     <div class="icon-btn" onclick="openStats()"><div class="icon">📊</div><span class="lbl">СТАТ.</span></div>
+    <div class="icon-btn" onclick="openMarathon()"><div class="icon">🏆</div><span class="lbl">МАРАФОН</span></div>
 </div>
 
 <div class="status-pill" id="statusPill"></div>
@@ -475,6 +559,20 @@
 <div class="history-strip" id="history"></div>
 <button class="verify-btn" id="btnVerify" onclick="openRecall()">👁 Проверить память</button>
 
+<!-- ══ MARATHON MODE ══ -->
+<div class="marathon-screen" id="marathonScreen">
+    <div class="marathon-head">
+        <div class="round-badge" id="marRoundBadge">РАУНД 1</div>
+        <div class="close-btn" onclick="exitMarathon()">✕</div>
+    </div>
+    <div class="marathon-phase-label" id="marPhaseLabel">Приготовьтесь</div>
+    <div class="marathon-timer-wrap" id="marTimerWrap" style="display:none">
+        <div class="marathon-timer-num" id="marTimerNum">--</div>
+        <div class="marathon-timer-bar-bg"><div class="marathon-timer-bar" id="marTimerBar"></div></div>
+    </div>
+    <div class="marathon-body" id="marBody"></div>
+</div>
+
 <!-- ══ SETTINGS MODAL ══ -->
 <div class="modal" id="modalSettings">
     <div class="modal-content">
@@ -483,6 +581,7 @@
             <button class="modal-tab active" onclick="switchTab('tabMode')">Режим</button>
             <button class="modal-tab" onclick="switchTab('tabTrain')">Тренировка</button>
             <button class="modal-tab" onclick="switchTab('tabUI')">Интерфейс</button>
+            <button class="modal-tab" onclick="switchTab('tabMarathon')">🏆 Марафон</button>
         </div>
 
         <!-- TAB: Mode -->
@@ -667,6 +766,70 @@
             </div>
         </div>
 
+        <!-- TAB: MARATHON -->
+        <div class="tab-panel" id="tabMarathon">
+            <div class="setting-group">
+                <h3>🏆 Марафон (Memory League)</h3>
+                <div class="flex-row" style="justify-content:space-between">
+                    <span style="font-size:0.8rem">Контент</span>
+                    <select id="selMarContent">
+                        <option value="numbers">Числа</option>
+                        <option value="cards">Карты</option>
+                    </select>
+                </div>
+                <div class="flex-row" style="justify-content:space-between; margin-top:8px">
+                    <span style="font-size:0.8rem">Длина последовательности</span>
+                    <input type="number" id="inpMarLength" value="10" min="3" max="60" style="width:60px">
+                </div>
+                <div class="flex-row" style="justify-content:space-between; margin-top:8px">
+                    <span style="font-size:0.8rem">Показ элементов</span>
+                    <select id="selMarReveal" onchange="document.getElementById('lblMarTime').textContent = this.value==='all' ? 'Время на запоминание (сек)' : 'Время на группу (сек)'">
+                        <option value="all">Целиком (сеткой)</option>
+                        <option value="1">По одному</option>
+                        <option value="2">По два</option>
+                        <option value="3">По три</option>
+                        <option value="5">По пять</option>
+                    </select>
+                </div>
+                <div class="flex-row" style="justify-content:space-between; margin-top:8px">
+                    <span style="font-size:0.8rem" id="lblMarTime">Время на запоминание (сек)</span>
+                    <input type="number" id="inpMarTime" value="20" min="1" max="300" step="1" style="width:60px">
+                </div>
+                <label class="checkbox-label block" style="margin-top:10px">
+                    <span>⏱ Показывать таймер обратного отсчёта</span>
+                    <input type="checkbox" id="chkMarTimer" checked>
+                </label>
+                <label class="checkbox-label block" style="margin-top:6px">
+                    <span>💡 Показывать правильный ответ при ошибке</span>
+                    <input type="checkbox" id="chkMarShowAnswer" checked>
+                </label>
+            </div>
+            <div class="setting-group">
+                <h3>📈 Прогрессия сложности</h3>
+                <label class="checkbox-label block" style="margin-bottom:8px">
+                    <span>Автоматически усложнять раунды</span>
+                    <input type="checkbox" id="chkMarAdaptive" checked>
+                </label>
+                <div class="flex-row" style="justify-content:space-between">
+                    <span style="font-size:0.8rem">+ Элементов за раунд</span>
+                    <input type="number" id="inpMarStepLen" value="2" min="0" max="20" style="width:55px">
+                </div>
+                <div class="flex-row" style="justify-content:space-between; margin-top:8px">
+                    <span style="font-size:0.8rem">− Секунд за раунд</span>
+                    <input type="number" id="inpMarStepTime" value="1" min="0" max="30" step="0.5" style="width:55px">
+                </div>
+                <div class="flex-row" style="justify-content:space-between; margin-top:8px">
+                    <span style="font-size:0.8rem">Мин. время (сек)</span>
+                    <input type="number" id="inpMarMinTime" value="3" min="1" max="60" style="width:55px">
+                </div>
+                <div class="flex-row" style="justify-content:space-between; margin-top:8px">
+                    <span style="font-size:0.8rem">Точность для перехода (%)</span>
+                    <input type="number" id="inpMarThreshold" value="90" min="10" max="100" step="5" style="width:55px">
+                </div>
+            </div>
+            <button class="btn-primary" style="margin-top:4px" onclick="closeSettings(); openMarathon();">🏆 Начать марафон</button>
+        </div>
+
         <button class="btn-primary" onclick="closeSettings()">✓ Применить и начать</button>
     </div>
 </div>
@@ -773,6 +936,8 @@ function loadState() {
             inpMin:'0', inpMax:'99', inpTimer:'3.0', inpPhonePause:'1.0', inpPhoneRate:'1.0',
             inpYearFrom:'1900', inpYearTo:'2100', inpMonthFrom:'1', inpMonthTo:'12',
             inpDayFrom:'1', inpDayTo:'31',
+            inpMarLength:'10', inpMarTime:'20', inpMarStepLen:'2', inpMarStepTime:'1',
+            inpMarMinTime:'3', inpMarThreshold:'90',
         };
         if (saved.inputs) {
             Object.keys(saved.inputs).forEach(id => {
@@ -782,7 +947,8 @@ function loadState() {
         }
         const checks = ['chkTimer','chkHaptic','chkPhantom','chkPill','chkHistory','chkProgress',
                         'chkDateUnique','chkDateWords','chkDate3tries','chkDateAutoNext',
-                        'chkReplayBtn','chkDateControls','chkPinBar','chkWakeLock'];
+                        'chkReplayBtn','chkDateControls','chkPinBar','chkWakeLock',
+                        'chkMarTimer','chkMarShowAnswer','chkMarAdaptive'];
         if (saved.checks) {
             checks.forEach(id => {
                 const el = document.getElementById(id);
@@ -808,14 +974,16 @@ function saveState() {
     try {
         const inputs = {};
         ['inpMin','inpMax','inpTimer','inpPhonePause','inpPhoneRate',
-         'inpYearFrom','inpYearTo','inpMonthFrom','inpMonthTo','inpDayFrom','inpDayTo'].forEach(id => {
+         'inpYearFrom','inpYearTo','inpMonthFrom','inpMonthTo','inpDayFrom','inpDayTo',
+         'inpMarLength','inpMarTime','inpMarStepLen','inpMarStepTime','inpMarMinTime','inpMarThreshold'].forEach(id => {
             const el = document.getElementById(id);
             if (el) inputs[id] = el.value;
         });
         const checks = {};
         ['chkTimer','chkHaptic','chkPhantom','chkPill','chkHistory','chkProgress',
          'chkDateUnique','chkDateWords','chkDate3tries','chkDateAutoNext',
-         'chkReplayBtn','chkDateControls','chkPinBar','chkWakeLock'].forEach(id => {
+         'chkReplayBtn','chkDateControls','chkPinBar','chkWakeLock',
+         'chkMarTimer','chkMarShowAnswer','chkMarAdaptive'].forEach(id => {
             const el = document.getElementById(id);
             if (el) checks[id] = el.checked;
         });
@@ -830,7 +998,7 @@ function saveState() {
 
 // ═══ STATS ═══
 function getStats() {
-    return JSON.parse(localStorage.getItem('mz9_stats') || '{"sessions":0,"totalItems":0,"totalCorrect":0,"totalDates":0,"bestStreak":0,"unlocked":[]}');
+    return JSON.parse(localStorage.getItem('mz9_stats') || '{"sessions":0,"totalItems":0,"totalCorrect":0,"totalDates":0,"bestStreak":0,"marathonBest":0,"unlocked":[]}');
 }
 function saveStats(st) { localStorage.setItem('mz9_stats', JSON.stringify(st)); }
 
@@ -880,6 +1048,7 @@ window.openStats = function() {
         <div class="stat-card warn"><div class="sv">${st.bestStreak}</div><div class="sk">Рекорд серии</div></div>
         <div class="stat-card pink"><div class="sv">${acc}%</div><div class="sk">Точность дат</div></div>
         <div class="stat-card accent"><div class="sv">${st.unlocked.length}/${ACHIEVEMENTS.length}</div><div class="sk">Достижений</div></div>
+        <div class="stat-card"><div class="sv">${st.marathonBest||0}</div><div class="sk">🏆 Марафон рекорд</div></div>
     `;
     const list = document.getElementById('achievementsList');
     list.innerHTML = '';
@@ -965,7 +1134,7 @@ window.switchTab = function(id) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    const idx = ['tabMode','tabTrain','tabUI'].indexOf(id);
+    const idx = ['tabMode','tabTrain','tabUI','tabMarathon'].indexOf(id);
     document.querySelectorAll('.modal-tab')[idx].classList.add('active');
 };
 
@@ -1614,6 +1783,317 @@ window.exportData = function() {
     }).join(S.mode==='phones'?'\n':' — ');
     try { navigator.clipboard.writeText(str).then(()=>alert('Скопировано!')); } catch(e) {}
 };
+
+// ═══ MARATHON MODE (Memory League style) ═══
+const RANK_ORDER = ['A','2','3','4','5','6','7','8','9','0','J','Q','K'];
+const SUIT_ORDER = ['S','H','D','C'];
+
+let MAR = {
+    active: false, phase: 'idle',
+    content: 'numbers', length: 10, reveal: 'all', time: 20,
+    round: 1, sequence: [], answers: [], activeIndex: 0,
+    pendingRank: null,
+    timers: [], countdownRAF: null,
+};
+
+function marClearTimers() {
+    MAR.timers.forEach(t => clearTimeout(t));
+    MAR.timers = [];
+    if (MAR.countdownRAF) { cancelAnimationFrame(MAR.countdownRAF); MAR.countdownRAF = null; }
+}
+
+window.openMarathon = function() {
+    if (S.auto) window.toggleAuto();
+    MAR.content   = document.getElementById('selMarContent').value;
+    MAR.length    = parseInt(document.getElementById('inpMarLength').value) || 10;
+    MAR.reveal    = document.getElementById('selMarReveal').value;
+    MAR.time      = parseFloat(document.getElementById('inpMarTime').value) || 20;
+    MAR.round     = 1;
+    MAR.active    = true;
+    document.getElementById('marathonScreen').classList.add('open');
+    if (S.prefs.wakeLock) { try { navigator.wakeLock?.request('screen'); } catch(e){} }
+    startMarathonRound();
+};
+
+window.exitMarathon = function() {
+    marClearTimers();
+    MAR.active = false;
+    document.getElementById('marathonScreen').classList.remove('open');
+    manageWakeLock();
+};
+
+function marGenerateSequence() {
+    const seq = [];
+    if (MAR.content === 'numbers') {
+        for (let i = 0; i < MAR.length; i++) seq.push(String(Math.floor(Math.random()*10)));
+    } else {
+        const pool = allCardCodes.slice();
+        for (let i = pool.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+        for (let i = 0; i < MAR.length; i++) seq.push(pool[i % pool.length]);
+    }
+    return seq;
+}
+
+function marCardLabel(code) {
+    return `${VALS[code[0]]}${SUITS[code[1]]}`;
+}
+
+function startMarathonRound() {
+    marClearTimers();
+    MAR.sequence = marGenerateSequence();
+    MAR.answers  = new Array(MAR.length).fill(null);
+    MAR.activeIndex = 0;
+    document.getElementById('marRoundBadge').textContent = `РАУНД ${MAR.round}`;
+    document.getElementById('marPhaseLabel').textContent = 'Приготовьтесь';
+    document.getElementById('marTimerWrap').style.display = 'none';
+    document.getElementById('marBody').innerHTML = `<div class="mar-single-num fade-in">${MAR.length}</div><div class="mar-progress-label">элементов — начинаем через мгновение</div>`;
+    MAR.timers.push(setTimeout(marStudyPhase, 1200));
+}
+
+function marStudyPhase() {
+    document.getElementById('marPhaseLabel').textContent = 'Запоминание';
+    vibrate('short');
+    if (MAR.reveal === 'all') {
+        marStudyAll();
+    } else {
+        marStudyChunk(0, parseInt(MAR.reveal));
+    }
+}
+
+function marStudyAll() {
+    const body = document.getElementById('marBody');
+    body.innerHTML = '<div class="mar-study-grid" id="marStudyGrid"></div><button class="btn-secondary" style="margin-top:18px" onclick="marGoRecall()">✅ Я готов — дальше</button>';
+    const grid = document.getElementById('marStudyGrid');
+    MAR.sequence.forEach(item => {
+        if (MAR.content === 'numbers') {
+            const d = document.createElement('div'); d.className = 'mar-study-num'; d.textContent = item;
+            grid.appendChild(d);
+        } else {
+            const img = document.createElement('img'); img.className = 'mar-study-card';
+            img.src = `https://deckofcardsapi.com/static/img/${item}.png`;
+            grid.appendChild(img);
+        }
+    });
+    marRunCountdown(MAR.time, marGoRecall);
+}
+
+function marStudyChunk(idx, size) {
+    if (idx >= MAR.sequence.length) { marGoRecall(); return; }
+    const body = document.getElementById('marBody');
+    const chunk = MAR.sequence.slice(idx, idx + size);
+    let inner;
+    if (MAR.content === 'numbers') {
+        inner = `<div class="mar-single-num fade-in">${chunk.join(' ')}</div>`;
+    } else {
+        inner = `<div style="display:flex;gap:10px;justify-content:center">${chunk.map(c=>`<img class="mar-single-card fade-in" src="https://deckofcardsapi.com/static/img/${c}.png">`).join('')}</div>`;
+    }
+    body.innerHTML = inner + `<div class="mar-progress-label">${Math.min(idx+size, MAR.sequence.length)} / ${MAR.sequence.length}</div>
+        <button class="btn-secondary" style="margin-top:18px" onclick="marSkipToRecall()">⏭ Пропустить показ</button>`;
+    marRunCountdown(MAR.time, () => marStudyChunk(idx + size, size));
+}
+
+window.marSkipToRecall = function() { marGoRecall(); };
+
+function marRunCountdown(totalSec, onDone) {
+    const wrap = document.getElementById('marTimerWrap');
+    const showTimer = document.getElementById('chkMarTimer') ? document.getElementById('chkMarTimer').checked : true;
+    wrap.style.display = showTimer ? 'block' : 'none';
+    const numEl = document.getElementById('marTimerNum'), barEl = document.getElementById('marTimerBar');
+    const start = performance.now(), totalMs = totalSec * 1000;
+    if (MAR.countdownRAF) cancelAnimationFrame(MAR.countdownRAF);
+    function tick(now) {
+        const elapsed = now - start;
+        const remaining = Math.max(0, totalMs - elapsed);
+        if (showTimer) {
+            numEl.textContent = (remaining/1000).toFixed(1) + 'с';
+            barEl.style.width = Math.max(0, remaining/totalMs*100) + '%';
+        }
+        if (remaining <= 0) { MAR.countdownRAF = null; onDone(); return; }
+        MAR.countdownRAF = requestAnimationFrame(tick);
+    }
+    MAR.countdownRAF = requestAnimationFrame(tick);
+}
+
+function marGoRecall() {
+    marClearTimers();
+    MAR.phase = 'recall';
+    document.getElementById('marTimerWrap').style.display = 'none';
+    document.getElementById('marPhaseLabel').textContent = 'Вспоминание — введите по порядку';
+    const body = document.getElementById('marBody');
+    body.innerHTML = `
+        <div class="mar-recall-grid" id="marRecallGrid"></div>
+        <div class="mar-keypad-hint" id="marKeyHint" style="display:${MAR.content==='cards'?'block':'none'}">Сначала ранг, затем масть</div>
+        <div class="mar-keypad" id="marKeypad"></div>
+        <div class="mar-actions">
+            <button class="btn-secondary" onclick="marClearActive()">⌫ Стереть</button>
+            <button class="btn-primary" onclick="marCheck()">✅ Проверить</button>
+        </div>`;
+    marBuildRecallGrid();
+    marBuildKeypad();
+    vibrate('short');
+}
+
+function marBuildRecallGrid() {
+    const grid = document.getElementById('marRecallGrid');
+    grid.innerHTML = '';
+    MAR.sequence.forEach((_, i) => {
+        const c = document.createElement('div');
+        c.className = 'mar-cell'; c.dataset.idx = i;
+        c.textContent = '';
+        c.onclick = () => { MAR.activeIndex = i; marRefreshGridActive(); };
+        grid.appendChild(c);
+    });
+    marRefreshGridActive();
+}
+
+function marRefreshGridActive() {
+    document.querySelectorAll('.mar-cell').forEach(c => {
+        const i = parseInt(c.dataset.idx);
+        c.classList.toggle('active', i === MAR.activeIndex);
+    });
+}
+
+function marBuildKeypad() {
+    const kp = document.getElementById('marKeypad');
+    kp.innerHTML = '';
+    if (MAR.content === 'numbers') {
+        for (let d = 0; d <= 9; d++) {
+            const b = document.createElement('button');
+            b.className = 'keypad-btn'; b.textContent = d;
+            b.onclick = () => marInputNumber(d);
+            kp.appendChild(b);
+        }
+    } else {
+        RANK_ORDER.forEach(r => {
+            const b = document.createElement('button');
+            b.className = 'keypad-btn'; b.textContent = VALS[r]; b.dataset.rank = r;
+            b.onclick = () => marSelectRank(r, b);
+            kp.appendChild(b);
+        });
+        SUIT_ORDER.forEach(s => {
+            const b = document.createElement('button');
+            b.className = 'keypad-btn wide ' + (['H','D'].includes(s) ? 'suit-red' : 'suit-black');
+            b.textContent = SUITS[s]; b.dataset.suit = s;
+            b.onclick = () => marSelectSuit(s);
+            kp.appendChild(b);
+        });
+    }
+}
+
+function marAdvanceActive() {
+    for (let i = 0; i < MAR.length; i++) {
+        const idx = (MAR.activeIndex + 1 + i) % MAR.length;
+        if (MAR.answers[idx] === null) { MAR.activeIndex = idx; return; }
+    }
+}
+
+function marInputNumber(d) {
+    MAR.answers[MAR.activeIndex] = String(d);
+    const cell = document.querySelector(`.mar-cell[data-idx="${MAR.activeIndex}"]`);
+    cell.textContent = d; cell.classList.add('filled');
+    vibrate('short');
+    marAdvanceActive(); marRefreshGridActive();
+}
+
+function marSelectRank(r, btn) {
+    MAR.pendingRank = r;
+    document.querySelectorAll('#marKeypad .keypad-btn[data-rank]').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function marSelectSuit(s) {
+    if (!MAR.pendingRank) { vibrate('short'); return; }
+    const code = MAR.pendingRank + s;
+    MAR.answers[MAR.activeIndex] = code;
+    const cell = document.querySelector(`.mar-cell[data-idx="${MAR.activeIndex}"]`);
+    cell.textContent = marCardLabel(code); cell.classList.add('filled');
+    document.querySelectorAll('#marKeypad .keypad-btn[data-rank]').forEach(b => b.classList.remove('selected'));
+    MAR.pendingRank = null;
+    vibrate('short');
+    marAdvanceActive(); marRefreshGridActive();
+}
+
+window.marClearActive = function() {
+    MAR.answers[MAR.activeIndex] = null;
+    const cell = document.querySelector(`.mar-cell[data-idx="${MAR.activeIndex}"]`);
+    if (cell) { cell.textContent = ''; cell.classList.remove('filled'); }
+};
+
+window.marCheck = function() {
+    let correct = 0;
+    const showAnswer = document.getElementById('chkMarShowAnswer').checked;
+    MAR.sequence.forEach((val, i) => {
+        const cell = document.querySelector(`.mar-cell[data-idx="${i}"]`);
+        cell.classList.remove('active');
+        const ok = MAR.answers[i] === val;
+        cell.classList.add(ok ? 'correct' : 'wrong');
+        if (ok) correct++;
+        else if (showAnswer) {
+            const lbl = document.createElement('div'); lbl.className = 'true-answer';
+            lbl.textContent = MAR.content === 'cards' ? marCardLabel(val) : val;
+            cell.appendChild(lbl);
+        }
+    });
+    document.querySelectorAll('.mar-cell').forEach(c => c.onclick = null);
+    document.getElementById('marKeypad').style.display = 'none';
+    document.getElementById('marKeyHint').style.display = 'none';
+    document.querySelector('.mar-actions').style.display = 'none';
+    const pct = Math.round(correct / MAR.length * 100);
+    vibrate(pct === 100 ? 'long' : 'short');
+    if (pct === 100) { document.body.classList.add('flash-correct'); setTimeout(()=>document.body.classList.remove('flash-correct'),300); }
+    marRecordResult(pct, MAR.length);
+    setTimeout(() => marShowResults(correct, pct), 500);
+};
+
+function marShowResults(correct, pct) {
+    document.getElementById('marPhaseLabel').textContent = 'Результат';
+    const threshold = parseInt(document.getElementById('inpMarThreshold').value) || 90;
+    const passed = pct >= threshold;
+    const body = document.getElementById('marBody');
+    body.innerHTML = `
+        <div class="mar-results">
+            <div class="mar-score ${passed?'good':'bad'}">${pct}%</div>
+            <div class="mar-result-stats">
+                <div class="mar-result-stat"><div class="v">${correct}/${MAR.length}</div><div class="k">ВЕРНО</div></div>
+                <div class="mar-result-stat"><div class="v">${MAR.round}</div><div class="k">РАУНД</div></div>
+                <div class="mar-result-stat"><div class="v">${MAR.time}с</div><div class="k">ВРЕМЯ</div></div>
+            </div>
+            <div class="mar-actions" style="display:flex">
+                <button class="btn-secondary" onclick="marRetryRound()">↺ Заново</button>
+                <button class="btn-primary" onclick="marNextRound()">🔁 Дальше</button>
+            </div>
+        </div>`;
+}
+
+window.marRetryRound = function() { startMarathonRound(); };
+
+window.marNextRound = function() {
+    const adaptive = document.getElementById('chkMarAdaptive').checked;
+    if (adaptive) {
+        const lastCorrect = MAR.answers.filter((a,i)=>a===MAR.sequence[i]).length;
+        const pct = Math.round(lastCorrect / MAR.length * 100);
+        const threshold = parseInt(document.getElementById('inpMarThreshold').value) || 90;
+        if (pct >= threshold) {
+            const stepLen  = parseInt(document.getElementById('inpMarStepLen').value) || 0;
+            const stepTime = parseFloat(document.getElementById('inpMarStepTime').value) || 0;
+            const minTime  = parseFloat(document.getElementById('inpMarMinTime').value) || 3;
+            MAR.length += stepLen;
+            MAR.time = Math.max(minTime, MAR.time - stepTime);
+        }
+    }
+    MAR.round++;
+    startMarathonRound();
+};
+
+function marRecordResult(pct, length) {
+    try {
+        const st = getStats();
+        st.marathonRounds = (st.marathonRounds || 0) + 1;
+        const threshold = parseInt(document.getElementById('inpMarThreshold').value) || 90;
+        if (pct >= threshold && length > (st.marathonBest || 0)) st.marathonBest = length;
+        localStorage.setItem('mz9_stats', JSON.stringify(st));
+    } catch(e) {}
+}
 
 // ═══ KEYBOARD ═══
 document.addEventListener('keydown', e => {
